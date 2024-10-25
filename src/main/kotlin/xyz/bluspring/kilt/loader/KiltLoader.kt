@@ -142,6 +142,7 @@ class KiltLoader {
 
                 if ( // Check if the dependency exists, and if it's required.
                     modLoadingQueue.none { it.modId == dependency.modId } &&
+                    !FabricLoader.getInstance().isModLoaded(dependency.modId) &&
                     dependency.isMandatory
                 ) {
                     dependencies.add(MissingDependencyLoadingState(dependency))
@@ -149,7 +150,7 @@ class KiltLoader {
                 }
 
                 // If it's not required, no need to worry.
-                if (modLoadingQueue.none { it.modId == dependency.modId })
+                if (modLoadingQueue.none { it.modId == dependency.modId } && !FabricLoader.getInstance().isModLoaded(dependency.modId))
                     return@dependencies
 
                 val dependencyMod = modLoadingQueue.first { it.modId == dependency.modId }
