@@ -29,7 +29,7 @@ class SodiumIEVertexConsumer(val bufferBuilder: ChunkMeshBufferBuilder, val mate
     }
 
     override fun color(red: Int, green: Int, blue: Int, alpha: Int): VertexConsumer {
-        this.color = FastColor.ARGB32.color(alpha, red, green, blue)
+        this.color = FastColor.ABGR32.color(alpha, red, green, blue)
 
         return this
     }
