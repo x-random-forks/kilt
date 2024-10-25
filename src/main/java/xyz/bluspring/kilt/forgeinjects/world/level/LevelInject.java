@@ -1,12 +1,16 @@
 // TRACKED HASH: 7ec032f8735b23aa563858eb4a3555caa9c5d7ff
 package xyz.bluspring.kilt.forgeinjects.world.level;
 
+import com.bawnorton.mixinsquared.TargetHandler;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.CapabilityProvider;
 import net.minecraftforge.common.capabilities.ICapabilityProviderImpl;
@@ -17,20 +21,29 @@ import net.minecraftforge.event.ForgeEventFactory;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import xyz.bluspring.kilt.helpers.mixin.Extends;
 import xyz.bluspring.kilt.injections.CapabilityProviderInjection;
 import xyz.bluspring.kilt.injections.world.level.LevelInjection;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.function.Consumer;
 
-@Mixin(Level.class)
+@Mixin(value = Level.class, priority = 1111) // higher priority to mixin to Porting Lib
 @Extends(CapabilityProvider.class)
 public abstract class LevelInject implements CapabilityProviderInjection, ICapabilityProviderImpl<Level>, IForgeLevel, LevelInjection {
+    public boolean restoringBlockSnapshots = false;
+    public boolean captureBlockSnapshots = false;
+
+    @Unique private final ArrayList<BlockEntity> freshBlockEntities = new ArrayList<>();
+    @Unique private final ArrayList<BlockEntity> pendingFreshBlockEntities = new ArrayList<>();
+
     @Shadow @Final public boolean isClientSide;
 
     @Shadow public abstract ResourceKey<Level> dimension();
@@ -39,6 +52,7 @@ public abstract class LevelInject implements CapabilityProviderInjection, ICapab
 
     @Shadow public abstract void updateNeighbourForOutputSignal(BlockPos pos, Block block);
 
+    @Shadow @Final private ResourceKey<Level> dimension;
     private double maxEntityRadius = 2.0D;
     @Override
     public double getMaxEntityRadius() {
@@ -57,6 +71,35 @@ public abstract class LevelInject implements CapabilityProviderInjection, ICapab
     @Override
     public ArrayList<BlockSnapshot> getCapturedBlockSnapshots() {
         return capturedBlockSnapshots;
+    }
+
+    @Inject(method = "setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;II)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;getBlock()Lnet/minecraft/world/level/block/Block;", ordinal = 0, shift = At.Shift.AFTER))
+    private void kilt$captureSnapshot(BlockPos pos, BlockState state, int flags, int recursionLeft, CallbackInfoReturnable<Boolean> cir, @Local(argsOnly = true) LocalRef<BlockPos> posRef, @Share("blockSnapshot") LocalRef<BlockSnapshot> blockSnapshot) {
+        posRef.set(pos.immutable());
+
+        if (this.captureBlockSnapshots && !this.isClientSide) {
+            blockSnapshot.set(BlockSnapshot.create(this.dimension, (Level) (Object) this, posRef.get()));
+            this.capturedBlockSnapshots.add(blockSnapshot.get());
+        }
+
+        // TODO: what are these used for?
+        BlockState old = this.getBlockState(posRef.get());
+        int oldLight = old.getLightEmission((Level) (Object) this, posRef.get());
+        int oldOpacity = old.getLightBlock((Level) (Object) this, posRef.get());
+    }
+
+    @Inject(method = "setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;II)Z", at = @At(value = "RETURN", ordinal = 2))
+    private void kilt$removeCapturedSnapshot(BlockPos pos, BlockState state, int flags, int recursionLeft, CallbackInfoReturnable<Boolean> cir, @Share("blockSnapshot") LocalRef<BlockSnapshot> blockSnapshot) {
+        if (blockSnapshot.get() != null) {
+            this.capturedBlockSnapshots.remove(blockSnapshot.get());
+        }
+    }
+
+    @Inject(method = "setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;II)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getBlockState(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;"), cancellable = true)
+    private void kilt$cancelIfCapturing(BlockPos pos, BlockState state, int flags, int recursionLeft, CallbackInfoReturnable<Boolean> cir, @Share("blockSnapshot") LocalRef<BlockSnapshot> blockSnapshot) {
+        if (blockSnapshot.get() != null) {
+            cir.setReturnValue(true);
+        }
     }
 
     @Redirect(method = "updateNeighbourForOutputSignal", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;is(Lnet/minecraft/world/level/block/Block;)Z", ordinal = 0))
@@ -85,5 +128,12 @@ public abstract class LevelInject implements CapabilityProviderInjection, ICapab
     public void kilt$notifyNeighbours(BlockPos pos, Block block, CallbackInfo ci) {
         // why is "isCanceled()" added at the end?
         ForgeEventFactory.onNeighborNotify((Level) (Object) this, pos, this.getBlockState(pos), EnumSet.allOf(Direction.class), false).isCanceled();
+    }
+
+    @SuppressWarnings("UnresolvedMixinReference")
+    @TargetHandler(mixin = "io.github.fabricators_of_create.porting_lib.mixin.common.LevelMixin", name = "port_lib$onBlockEntitiesLoad")
+    @Redirect(method = "@MixinSquared:Handler", at = @At(value = "INVOKE", target = "Ljava/util/ArrayList;forEach(Ljava/util/function/Consumer;)V", remap = false))
+    private void kilt$loadBlockEntitiesForge(ArrayList<BlockEntity> instance, Consumer<BlockEntity> consumer) {
+        instance.forEach(BlockEntity::onLoad);
     }
 }
