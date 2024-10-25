@@ -77,7 +77,12 @@ class KiltLoader {
 
         // If exceptions had occurred during preloading, then create a window to show the exceptions.
         if (thrownExceptions.isNotEmpty()) {
-            Kilt.logger.error("Exceptions occurred in Forge mod loading! Creating window..")
+            Kilt.logger.error("Failed to load Forge mods in Kilt!")
+
+            for ((name, exception) in thrownExceptions) {
+                Kilt.logger.error("- $name failed to load! Exception:")
+                Kilt.logger.error(exception.stackTraceToString())
+            }
 
             FabricGuiEntry.displayError("Exceptions occurred whilst loading Forge mods in Kilt!", null, {
                 val errorTab = it.addTab("Kilt Error")
