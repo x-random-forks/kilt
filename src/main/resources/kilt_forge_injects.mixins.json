@@ -238,6 +238,7 @@
         "client.model.HumanoidModelInject",
         "client.model.HumanoidModelInject$ArmPoseInject",
         "client.model.geom.LayerDefinitionsInject",
+        "client.multiplayer.ClientChunkCacheInject",
         "client.multiplayer.ClientHandshakePacketListenerImplInject",
         "client.multiplayer.ClientLevelInject",
         "client.multiplayer.ClientPacketListenerInject",
