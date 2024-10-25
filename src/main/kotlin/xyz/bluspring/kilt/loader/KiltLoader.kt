@@ -685,7 +685,7 @@ class KiltLoader {
     }
 
     fun getMod(id: String): ForgeMod? {
-        return mods.firstOrNull { it.modId == id }
+        return mods.firstOrNull { it.modId == id } ?: modLoadingQueue.firstOrNull { it.modId == id }
     }
 
     fun hasMod(id: String): Boolean {
