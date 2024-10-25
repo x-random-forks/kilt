@@ -25,9 +25,9 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import xyz.bluspring.kilt.injections.sodium.BlockRenderContextInjection;
 
 import java.util.List;
+import java.util.Objects;
 
 @IfModLoaded("sodium")
 @Mixin(BlockRenderer.class)
@@ -53,7 +53,7 @@ public abstract class BlockRendererMixin {
      */
     @Overwrite(remap = false)
     public void renderModel(BlockRenderContext ctx, ChunkBuildBuffers buffers) {
-        var data = ((BlockRenderContextInjection) ctx).kilt$getModelData();
+        var data = Objects.requireNonNullElse(ctx.world().getModelDataManager().getAt(ctx.pos()), ModelData.EMPTY);
 
         ColorProvider<BlockState> colorizer = this.colorProviderRegistry.getColorProvider(ctx.state().getBlock());
 
