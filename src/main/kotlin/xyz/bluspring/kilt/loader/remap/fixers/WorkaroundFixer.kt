@@ -1,11 +1,11 @@
 package xyz.bluspring.kilt.loader.remap.fixers
 
-import org.objectweb.asm.tree.AbstractInsnNode
-import org.objectweb.asm.tree.ClassNode
-import org.objectweb.asm.tree.MethodInsnNode
-import org.objectweb.asm.tree.MethodNode
+import org.objectweb.asm.tree.*
+import xyz.bluspring.kilt.loader.remap.KiltRemapper
 
 object WorkaroundFixer {
+    private val potionBrewingMapped = KiltRemapper.remapClass("net/minecraft/world/item/alchemy/PotionBrewing\$Mix")
+
     fun fixClass(classNode: ClassNode) {
         val methodReplace = mutableListOf<MethodNode>()
 
@@ -19,6 +19,14 @@ object WorkaroundFixer {
                         newNodeMap[insnNode] = node
                     } else if (insnNode.name == "writeToPacket") {
                         val node = MethodInsnNode(insnNode.opcode, "net/minecraftforge/fluids/FluidStack", "forge\$writeToPacket", insnNode.desc)
+                        newNodeMap[insnNode] = node
+                    }
+                } else if (insnNode is FieldInsnNode && insnNode.owner == potionBrewingMapped) {
+                    if (insnNode.name == "from") {
+                        val node = FieldInsnNode(insnNode.opcode, insnNode.owner, "kilt\$from", insnNode.desc)
+                        newNodeMap[insnNode] = node
+                    } else if (insnNode.name == "to") {
+                        val node = FieldInsnNode(insnNode.opcode, insnNode.owner, "kilt\$to", insnNode.desc)
                         newNodeMap[insnNode] = node
                     }
                 }

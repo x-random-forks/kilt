@@ -118,6 +118,8 @@
         "world.item.RarityInject",
         "world.item.ShovelItemInject",
         "world.item.SpawnEggItemInject",
+        "world.item.alchemy.PotionBrewingInject",
+        "world.item.alchemy.PotionBrewingInject$MixInject",
         "world.item.alchemy.PotionInject",
         "world.item.crafting.IngredientInject",
         "world.item.crafting.IngredientInject$TagValueInject",
