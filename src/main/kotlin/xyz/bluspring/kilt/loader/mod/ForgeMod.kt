@@ -63,6 +63,8 @@ class ForgeMod(
     var parent: ForgeMod? = null
     var manifest: Manifest? = null
 
+    private lateinit var secureJar: SecureJar
+
     val jar: JarFile
         get() {
             return if (this@ForgeMod::remappedModFile.isInitialized)
@@ -87,10 +89,14 @@ class ForgeMod(
 
     fun getSecureJar(): Supplier<SecureJar> {
         return Supplier {
-            if (this@ForgeMod::remappedModFile.isInitialized)
-                SecureJar.from(remappedModFile.toPath())
-            else
-                SecureJar.from((modFile?.toPath() ?: Kilt::class.java.protectionDomain.codeSource.location.toURI().toPath()))
+            if (!this@ForgeMod::secureJar.isInitialized) {
+                secureJar = if (this@ForgeMod::remappedModFile.isInitialized)
+                    SecureJar.from(remappedModFile.toPath())
+                else
+                    SecureJar.from((modFile?.toPath() ?: Kilt::class.java.protectionDomain.codeSource.location.toURI().toPath()))
+            }
+
+            return@Supplier secureJar
         }
     }
 
