@@ -331,8 +331,15 @@ class KiltLoader {
                     val file = File(extractedModsDir, "${entry.crc}-${filePath.replace("META-INF/jarjar/", "")}")
                     if (!file.exists()) {
                         // Extract the JAR out of its containing mod.
-                        file.createNewFile()
-                        file.writeBytes(jarFile.getInputStream(entry).readAllBytes())
+                        try {
+                            file.createNewFile()
+                            file.writeBytes(jarFile.getInputStream(entry).readAllBytes())
+                        } catch (e: Exception) {
+                            Kilt.logger.error("Failed to load JiJ'd file: ${filePath.replace("META-INF/jarjar/", "")}")
+                            thrownExceptions[filePath.replace("META-INF/jarjar/", "")] = e
+
+                            return@forEach
+                        }
                     }
 
                     preloadJarMod(file, ZipFile(file)) { mod ->
