@@ -49,7 +49,7 @@ object KiltRemapper {
     // Keeps track of the remapper changes, so every time I update the remapper,
     // it remaps all the mods following the remapper changes.
     // this can update by like 12 versions in 1 update, so don't worry too much about it.
-    const val REMAPPER_VERSION = 129
+    const val REMAPPER_VERSION = 130
 
     const val MC_MAPPED_JAR_VERSION = 2
 
@@ -301,6 +301,9 @@ object KiltRemapper {
                 val data = jar.getInputStream(jsonEntry).bufferedReader()
 
                 val json = JsonParser.parseReader(data).asJsonObject
+
+                if (!json.has("package"))
+                    continue
 
                 val mixinPackage = json.get("package").asString
 
