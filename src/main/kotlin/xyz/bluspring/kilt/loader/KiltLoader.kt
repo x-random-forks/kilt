@@ -328,15 +328,18 @@ class KiltLoader {
 
                     // Use the CRC as a way of having a unique point of storage, so
                     // if the file already exists, no need to extract it again.
-                    val file = File(extractedModsDir, "${entry.crc}-${filePath.replace("META-INF/jarjar/", "")}")
+                    val fileName = filePath.split("/").last()
+
+                    val file = File(extractedModsDir, "${entry.crc}-$fileName")
                     if (!file.exists()) {
                         // Extract the JAR out of its containing mod.
                         try {
                             file.createNewFile()
                             file.writeBytes(jarFile.getInputStream(entry).readAllBytes())
                         } catch (e: Exception) {
-                            Kilt.logger.error("Failed to load JiJ'd file: ${filePath.replace("META-INF/jarjar/", "")}")
-                            thrownExceptions[filePath.replace("META-INF/jarjar/", "")] = e
+                            Kilt.logger.error("Failed to load JiJ'd file: $fileName")
+                            e.printStackTrace()
+                            thrownExceptions[fileName] = e
 
                             return@forEach
                         }
