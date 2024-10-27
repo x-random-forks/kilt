@@ -13,7 +13,7 @@ import java.util.regex.Pattern
 // The specification can be found here: https://github.com/MinecraftForge/AccessTransformers/blob/master/FMLAT.md
 object AccessTransformerLoader {
     private val logger = LoggerFactory.getLogger("Kilt Access Transformers")
-    private val debug = FabricLoader.getInstance().isDevelopmentEnvironment
+    private val debug = System.getProperty("kilt.printATDebug") == "true"
     private var hasLoaded = false
 
     private val whitespace = Pattern.compile("[ \t]+")
@@ -24,6 +24,8 @@ object AccessTransformerLoader {
     private fun println(info: String) {
         if (debug)
             logger.info(info)
+        else
+            logger.debug(info)
     }
 
     val entryTripleClass = Class.forName("net.fabricmc.loader.impl.lib.accesswidener.EntryTriple")
