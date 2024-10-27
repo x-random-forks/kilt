@@ -45,6 +45,10 @@ public class KiltMixinPlugin implements IMixinConfigPlugin {
             return true;
         }
 
+        if (mixinClassName.contains("immersive_engineering")) {
+            return Kilt.Companion.getLoader().hasMod("immersiveengineering") && MixinConstraints.shouldApplyMixin(targetClassName, mixinClassName);
+        }
+
         return MixinConstraints.shouldApplyMixin(targetClassName, mixinClassName);
     }
 
