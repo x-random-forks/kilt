@@ -1,6 +1,7 @@
 // TRACKED HASH: 4b65780a21b72c6641617a99b2ca8d8e31521909
 package xyz.bluspring.kilt.forgeinjects.client.gui.screens.advancements;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalIntRef;
 import net.minecraft.advancements.Advancement;
@@ -14,8 +15,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import xyz.bluspring.kilt.helpers.mixin.CreateInitializer;
 import xyz.bluspring.kilt.injections.client.gui.screens.advancements.AdvancementTabInjection;
 import xyz.bluspring.kilt.injections.client.gui.screens.advancements.AdvancementTabTypeInjection;
@@ -46,14 +48,14 @@ public class AdvancementTabInject implements AdvancementTabInjection {
         return AdvancementTabInjection.create(minecraft, advancementsScreen, advancementTabType, originalTabsValue.get() % AdvancementTabTypeInjection.MAX_TABS, originalTabsValue.get() / AdvancementTabTypeInjection.MAX_TABS, advancement, displayInfo);
     }
 
-    @ModifyVariable(method = "create", at = @At(value = "LOAD", ordinal = 0), name = "tabIndex")
-    private static int kilt$checkWithMaxTabs(int tabs, @Share("originalTabs") LocalIntRef originalTabsValue) {
-        originalTabsValue.set(tabs);
-        return tabs % AdvancementTabTypeInjection.MAX_TABS;
+    @Inject(method = "create", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/advancements/AdvancementTabType;getMax()I", ordinal = 0, shift = At.Shift.BY, by = -2))
+    private static void kilt$checkWithMaxTabs(Minecraft minecraft, AdvancementsScreen screen, int tabIndex, Advancement advancement, CallbackInfoReturnable<AdvancementTab> cir, @Share("originalTabs") LocalIntRef originalTabsValue, @Local(argsOnly = true) LocalIntRef tabIndexRef) {
+        originalTabsValue.set(tabIndex);
+        tabIndexRef.set(tabIndex % AdvancementTabTypeInjection.MAX_TABS);
     }
 
-    @ModifyVariable(method = "create", at = @At(value = "LOAD", ordinal = 1), name = "tabIndex")
-    private static int kilt$fixMaxTabs(int tabs, @Share("originalTabs") LocalIntRef originalTabsValue) {
-        return originalTabsValue.get();
+    @Inject(method = "create", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/advancements/AdvancementTabType;getMax()I", ordinal = 1, shift = At.Shift.BY, by = -2))
+    private static void kilt$fixMaxTabs(Minecraft minecraft, AdvancementsScreen screen, int tabIndex, Advancement advancement, CallbackInfoReturnable<AdvancementTab> cir, @Local(argsOnly = true) LocalIntRef tabIndexRef, @Share("originalTabs") LocalIntRef originalTabsValue) {
+        tabIndexRef.set(originalTabsValue.get());
     }
 }
