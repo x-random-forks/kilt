@@ -274,9 +274,16 @@ class KiltEarlyRiser : Runnable {
             }
         }
 
-        Kilt.loader.preloadMods()
-        KiltMixinLoader.init(Kilt.loader.modLoadingQueue.stream().toList())
-        AccessTransformerLoader.runTransformers()
+        try {
+            Kilt.loader.preloadMods()
+            KiltMixinLoader.init(Kilt.loader.modLoadingQueue.stream().toList())
+            AccessTransformerLoader.runTransformers()
+        } catch (e: Exception) {
+            Kilt.logger.error("Kilt failed to preload mods!")
+            Kilt.logger.error("The following error may yell at Fabric-ASM/\"mm\", which is NOT the reason behind this crash.")
+
+            throw e
+        }
     }
 
     private val ignoredKeywords = listOf("kilt", "fml", "mixin")
