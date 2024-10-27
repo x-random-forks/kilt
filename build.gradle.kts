@@ -37,7 +37,11 @@ loom {
 
 repositories {
     maven("https://mvn.devos.one/releases/") {
-        name = "DevOS One"
+        name = "devOS Maven"
+    }
+
+    maven("https://mvn.devos.one/snapshots/") {
+        name = "devOS Maven (Snapshots)"
     }
 
     maven("https://jitpack.io/") {

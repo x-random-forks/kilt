@@ -4,6 +4,8 @@ import com.bawnorton.mixinsquared.ext.ExtensionRegistrar;
 import com.llamalad7.mixinextras.MixinExtrasBootstrap;
 import com.moulberry.mixinconstraints.MixinConstraints;
 import com.moulberry.mixinconstraints.mixin.MixinConstraintsBootstrap;
+import cpw.mods.niofs.union.KiltUnionFileSystemHelper;
+import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -19,6 +21,12 @@ public class KiltMixinPlugin implements IMixinConfigPlugin {
     @Override
     public void onLoad(String mixinPackage) {
         this.mixinPackage = mixinPackage;
+
+        try {
+            KiltUnionFileSystemHelper.directlyLoadIntoClassLoader(FabricLauncherBase.getLauncher().getTargetClassLoader());
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
 
         MixinExtrasBootstrap.init();
         MixinConstraintsBootstrap.init(mixinPackage);
