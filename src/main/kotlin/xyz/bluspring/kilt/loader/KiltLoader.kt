@@ -153,7 +153,23 @@ class KiltLoader {
                 if (modLoadingQueue.none { it.modId == dependency.modId } && !FabricLoader.getInstance().isModLoaded(dependency.modId))
                     return@dependencies
 
-                val dependencyMod = modLoadingQueue.first { it.modId == dependency.modId }
+                val dependencyMod = modLoadingQueue.firstOrNull { it.modId == dependency.modId }
+
+                if (dependencyMod == null && FabricLoader.getInstance().isModLoaded(dependency.modId)) {
+                    val dependencyContainer = FabricLoader.getInstance().getModContainer(dependency.modId).orElseThrow()
+                    val version = DefaultArtifactVersion(dependencyContainer.metadata.version.friendlyString)
+
+                    if (dependency.versionRange.containsVersion(version)) {
+                        dependencies.add(ValidDependencyLoadingState(dependency))
+                    } else {
+                        dependencies.add(IncompatibleDependencyLoadingState(dependency, version))
+                    }
+
+                    return@dependencies
+                } else if (dependencyMod == null) {
+                    dependencies.add(MissingDependencyLoadingState(dependency))
+                    return@dependencies
+                }
 
                 if (!dependency.versionRange.containsVersion(dependencyMod.version)) {
                     dependencies.add(IncompatibleDependencyLoadingState(
