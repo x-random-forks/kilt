@@ -135,13 +135,6 @@ class Kilt : ModInitializer {
                 EventResult.pass()
         }
 
-        EntityEvent.LIVING_DEATH.register { entity, source ->
-            if (ForgeHooks.onLivingDeath(entity, source))
-                EventResult.interruptDefault()
-            else
-                EventResult.pass()
-        }
-
         EntityEvent.LIVING_HURT.register { entity, source, amount ->
             val newAmount = ForgeHooks.onLivingHurt(entity, source, amount)
 
@@ -190,6 +183,14 @@ class Kilt : ModInitializer {
 
         ServerWorldEvents.UNLOAD.register { server, level ->
             MinecraftForge.EVENT_BUS.post(LevelEvent.Unload(level))
+        }
+
+        LivingEntityEvents.LOOTING_LEVEL.register { source, target, level, _ ->
+            ForgeHooks.getLootingLevel(target, source, level)
+        }
+
+        LivingEntityEvents.DROPS.register { target, source, drops, level, recentlyHit ->
+            !ForgeHooks.onLivingDrops(target, source, drops, level, recentlyHit)
         }
     }
 
