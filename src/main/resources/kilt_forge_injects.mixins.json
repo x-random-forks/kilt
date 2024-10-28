@@ -254,6 +254,7 @@
         "client.player.LocalPlayerInject",
         "client.player.RemotePlayerInject",
         "client.renderer.DimensionSpecialEffectsInject",
+        "client.renderer.FogRendererInject",
         "client.renderer.ItemBlockRenderTypesInject",
         "client.renderer.ItemInHandRendererInject",
         "client.renderer.LevelRendererInject",
