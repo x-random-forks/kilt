@@ -2,11 +2,14 @@
 package xyz.bluspring.kilt.forgeinjects.world.entity.player;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.extensions.IForgePlayer;
 import net.minecraftforge.event.ForgeEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -56,6 +59,18 @@ public abstract class PlayerInject extends LivingEntity implements IForgePlayer,
 
         if (blockPos != null)
             cir.setReturnValue(ForgeEventFactory.getBreakSpeed((Player) (Object) this, state, cir.getReturnValue(), blockPos));
+    }
+
+    @Inject(method = "hurt", at = @At("HEAD"), cancellable = true)
+    private void kilt$checkPlayerAttack(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        if (!ForgeHooks.onPlayerAttack((Player) (Object) this, source, amount))
+            cir.setReturnValue(false);
+    }
+
+    @Inject(method = "attack", at = @At("HEAD"), cancellable = true)
+    private void kilt$checkPlayerTargetAttack(Entity target, CallbackInfo ci) {
+        if (!ForgeHooks.onPlayerAttackTarget((Player) (Object) this, target))
+            ci.cancel();
     }
 
     /*@ModifyReturnValue(method = "createAttributes", at = @At("RETURN"))

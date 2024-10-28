@@ -252,6 +252,7 @@
         "client.multiplayer.PlayerInfoInject",
         "client.multiplayer.ServerDataInject",
         "client.player.LocalPlayerInject",
+        "client.player.RemotePlayerInject",
         "client.renderer.DimensionSpecialEffectsInject",
         "client.renderer.ItemBlockRenderTypesInject",
         "client.renderer.ItemInHandRendererInject",
