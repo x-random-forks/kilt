@@ -2,7 +2,8 @@
 package xyz.bluspring.kilt.forgeinjects.client.renderer;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.fabricmc.loader.api.FabricLoader;
+import com.moulberry.mixinconstraints.annotations.IfModAbsent;
+import com.moulberry.mixinconstraints.annotations.IfModLoaded;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderType;
@@ -14,6 +15,7 @@ import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -27,34 +29,27 @@ public class LevelRendererInject implements LevelRendererInjection {
     @Shadow private int ticks;
 
     @Shadow @Nullable private Frustum capturedFrustum;
-
     @Shadow private Frustum cullingFrustum;
-
     @Shadow @Final private Minecraft minecraft;
 
-    private final AtomicReference<Matrix4f> kilt$projectionMatrix = new AtomicReference<>(null);
+    @Unique private final AtomicReference<Matrix4f> kilt$projectionMatrix = new AtomicReference<>(null);
 
     @Override
-    public Matrix4f getProjectionMatrix() {
+    public Matrix4f kilt$getProjectionMatrix() {
         return kilt$projectionMatrix.get();
     }
 
+    @IfModLoaded("sodium")
     @Inject(method = "renderChunkLayer", at = @At("HEAD"))
     public void kilt$sodiumStoreProjectionMatrix(RenderType renderType, PoseStack poseStack, double camX, double camY, double camZ, Matrix4f projectionMatrix, CallbackInfo ci) {
         // Sodium doesn't give the projection matrix to itself, so we should store it.
         // If there's a better way of doing this, please PR.
-        if (!FabricLoader.getInstance().isModLoaded("sodium"))
-            return;
-
         this.kilt$projectionMatrix.set(projectionMatrix);
     }
 
+    @IfModAbsent("sodium")
     @Inject(method = "renderChunkLayer", at = @At(value = "TAIL", shift = At.Shift.BY, by = -1))
     public void kilt$dispatchRenderEventBasedOnType(RenderType renderType, PoseStack poseStack, double camX, double camY, double camZ, Matrix4f projectionMatrix, CallbackInfo ci) {
-        // Stop right there, because Sodium injects here.
-        if (FabricLoader.getInstance().isModLoaded("sodium"))
-            return;
-
         var stage = RenderLevelStageEvent.Stage.fromRenderType(renderType);
 
         if (stage != null) {

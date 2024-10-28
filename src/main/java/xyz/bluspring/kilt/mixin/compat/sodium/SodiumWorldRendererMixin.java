@@ -31,7 +31,7 @@ public class SodiumWorldRendererMixin {
         if (stage != null) {
             var mc = Minecraft.getInstance();
             var levelRenderer = (LevelRendererAccessor) mc.levelRenderer;
-            var projectionMatrix = ((LevelRendererInjection) mc.levelRenderer).getProjectionMatrix();
+            var projectionMatrix = ((LevelRendererInjection) mc.levelRenderer).kilt$getProjectionMatrix();
 
             // it might be possible for this to be null, so let's just make sure that never happens.
             if (projectionMatrix == null)

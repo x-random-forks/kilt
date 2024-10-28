@@ -173,6 +173,16 @@ dependencies {
     // Use Sinytra Connector's fork of ForgeAutoRenamingTool
     implementation(include("dev.su5ed.sinytra:ForgeAutoRenamingTool:${property("forgerenamer_version")}")!!)
 
+    fun modOptional(dependencyNotation: String, shouldRunInRuntime: Boolean, configuration: Action<ExternalModuleDependency>) {
+        if (shouldRunInRuntime) {
+            modImplementation(dependencyNotation, configuration)
+        } else {
+            modCompileOnly(dependencyNotation, configuration)
+        }
+    }
+
+    val runSodium = false
+
     // Runtime mods for testing
     modRuntimeOnly ("com.terraformersmc:modmenu:7.1.0") {
         exclude("net.fabricmc", "fabric-loader")
@@ -180,13 +190,13 @@ dependencies {
     modRuntimeOnly ("maven.modrinth:ferrite-core:6.0.1-fabric") {
         exclude("net.fabricmc", "fabric-loader")
     }
-    modImplementation ("maven.modrinth:sodium:mc1.20.1-0.5.11") {
+    modOptional ("maven.modrinth:sodium:mc1.20.1-0.5.11", runSodium) {
         exclude("net.fabricmc", "fabric-loader")
     }
     modRuntimeOnly ("maven.modrinth:lithium:mc1.20.1-0.11.2") {
         exclude("net.fabricmc", "fabric-loader")
     }
-    modRuntimeOnly ("maven.modrinth:indium:1.0.34+mc1.20.1") {
+    modOptional ("maven.modrinth:indium:1.0.34+mc1.20.1", runSodium) {
         exclude("net.fabricmc", "fabric-loader")
     }
 
