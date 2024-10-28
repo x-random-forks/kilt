@@ -1,45 +1,59 @@
 package xyz.bluspring.kilt.forgeinjects.client.renderer.texture;
 
-import com.llamalad7.mixinextras.sugar.Local;
-import com.llamalad7.mixinextras.sugar.Share;
-import com.llamalad7.mixinextras.sugar.ref.LocalIntRef;
 import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.renderer.texture.MipmapGenerator;
 import net.minecraftforge.client.ForgeHooksClient;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArgs;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(MipmapGenerator.class)
 public abstract class MipmapGeneratorInject {
-    @Inject(method = "generateMipLevels", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/MipmapGenerator;hasTransparentPixel(Lcom/mojang/blaze3d/platform/NativeImage;)Z", shift = At.Shift.AFTER))
-    private static void kilt$checkMaxMipmapLevel(CallbackInfoReturnable<NativeImage[]> cir, @Local(ordinal = 1) NativeImage[] images, @Share("maxMipLevel") LocalIntRef mipLevel) {
-        mipLevel.set(ForgeHooksClient.getMaxMipmapLevel(images[0].getWidth(), images[0].getHeight()));
-    }
+    @Shadow private static boolean hasTransparentPixel(NativeImage image) {
+        throw new IllegalStateException();
+    };
+    @Shadow private static int alphaBlend(int col0, int col1, int col2, int col3, boolean transparent) {
+        throw new IllegalStateException();
+    };
 
-    @ModifyArgs(method = "generateMipLevels", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/NativeImage;<init>(IIZ)V"))
-    private static void kilt$guardInvalidTextureSize(Args args) {
-        args.set(0, Math.max(1, args.get(0)));
-        args.set(1, Math.max(1, args.get(1)));
-    }
 
-    @Inject(method = "generateMipLevels", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/NativeImage;getWidth()I", ordinal = 1), cancellable = true)
-    private static void kilt$cancelIfAboveMaxMipLevel(NativeImage[] images, int mipLevel, CallbackInfoReturnable<NativeImage[]> cir, @Share("maxMipLevel") LocalIntRef maxMipLevel, @Local(ordinal = 1) int i, @Local(ordinal = 1) NativeImage[] nativeImages, @Local(ordinal = 1) NativeImage image) {
-        // Kilt: this needs to be done
-        if (i > maxMipLevel.get()) {
-            nativeImages[i] = image;
+    /**
+     * @author BluSpring
+     * @reason no other way to add a continue, other than writing a fuckin' mixin plugin for it, or doing some weird workarounds.
+     */
+    @Overwrite
+    public static NativeImage[] generateMipLevels(NativeImage[] images, int mipLevel) {
+        if (mipLevel + 1 <= images.length) {
+            return images;
+        } else {
+            NativeImage[] nativeImages = new NativeImage[mipLevel + 1];
+            nativeImages[0] = images[0];
+            boolean bl = hasTransparentPixel(nativeImages[0]);
 
-            if (i < mipLevel) {
-                for (int j = i + 1; j <= mipLevel; j++) {
-                    var image2 = images[j - 1];
-                    nativeImages[j] = new NativeImage(Math.max(1, image2.getWidth() >> 1), Math.max(1, image2.getHeight() >> 1), false);
+            int maxMipLevel = ForgeHooksClient.getMaxMipmapLevel(nativeImages[0].getWidth(), nativeImages[0].getHeight());
+            for(int i = 1; i <= mipLevel; ++i) {
+                if (i < images.length) {
+                    nativeImages[i] = images[i];
+                } else {
+                    NativeImage nativeImage = nativeImages[i - 1];
+                    NativeImage nativeImage2 = new NativeImage(Math.max(1, nativeImage.getWidth() >> 1), Math.max(1, nativeImage.getHeight() >> 1), false);;
+                    if (i <= maxMipLevel) {
+                        int j = nativeImage2.getWidth();
+                        int k = nativeImage2.getHeight();
+
+                        for (int l = 0; l < j; ++l) {
+                            for (int m = 0; m < k; ++m) {
+                                nativeImage2.setPixelRGBA(l, m, alphaBlend(nativeImage.getPixelRGBA(l * 2 + 0, m * 2 + 0), nativeImage.getPixelRGBA(l * 2 + 1, m * 2 + 0), nativeImage.getPixelRGBA(l * 2 + 0, m * 2 + 1), nativeImage.getPixelRGBA(l * 2 + 1, m * 2 + 1), bl));
+                            }
+                        }
+                    }
+
+                    nativeImages[i] = nativeImage2;
                 }
             }
 
-            cir.setReturnValue(images);
+            return nativeImages;
         }
     }
+
 }
