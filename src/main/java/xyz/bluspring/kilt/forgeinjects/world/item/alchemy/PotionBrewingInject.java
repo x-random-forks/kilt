@@ -72,11 +72,11 @@ public abstract class PotionBrewingInject {
         @Inject(method = "<init>", at = @At("TAIL"))
         private void kilt$getHolderValuesFromRegistry(T from, Ingredient ingredient, T to, CallbackInfo ci) {
             if (from instanceof Potion fromPotion && to instanceof Potion toPotion) {
-                this.kilt$from = (Holder.Reference<T>) ForgeRegistries.POTIONS.getDelegateOrThrow(fromPotion);
-                this.kilt$to = (Holder.Reference<T>) ForgeRegistries.POTIONS.getDelegateOrThrow(toPotion);
+                ForgeRegistries.POTIONS.getDelegate(fromPotion).ifPresent(potion -> this.kilt$from = (Holder.Reference<T>) potion);
+                ForgeRegistries.POTIONS.getDelegate(toPotion).ifPresent(potion -> this.kilt$to = (Holder.Reference<T>) potion);
             } else if (from instanceof Item fromItem && to instanceof Item toItem) {
-                this.kilt$from = (Holder.Reference<T>) ForgeRegistries.ITEMS.getDelegateOrThrow(fromItem);
-                this.kilt$to = (Holder.Reference<T>) ForgeRegistries.ITEMS.getDelegateOrThrow(toItem);
+                ForgeRegistries.ITEMS.getDelegate(fromItem).ifPresent(item -> this.kilt$from = (Holder.Reference<T>) item);
+                ForgeRegistries.ITEMS.getDelegate(toItem).ifPresent(item -> this.kilt$to = (Holder.Reference<T>) item);
             }
         }
 
