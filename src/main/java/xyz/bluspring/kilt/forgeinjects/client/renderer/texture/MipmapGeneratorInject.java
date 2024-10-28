@@ -34,8 +34,8 @@ public abstract class MipmapGeneratorInject {
 
             if (i < mipLevel) {
                 for (int j = i + 1; j <= mipLevel; j++) {
-                    var image2 = images[i - 1];
-                    nativeImages[i] = new NativeImage(Math.max(1, image2.getWidth() >> 1), Math.max(1, image2.getHeight() >> 1), false);
+                    var image2 = images[j - 1];
+                    nativeImages[j] = new NativeImage(Math.max(1, image2.getWidth() >> 1), Math.max(1, image2.getHeight() >> 1), false);
                 }
             }
 
