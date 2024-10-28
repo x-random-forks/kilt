@@ -22,10 +22,10 @@ object WorkaroundFixer {
                         newNodeMap[insnNode] = node
                     }
                 } else if (insnNode is FieldInsnNode && insnNode.owner == potionBrewingMapped) {
-                    if (insnNode.name == "from") {
+                    if (insnNode.name == "field_8962" || insnNode.name == "from") {
                         val node = FieldInsnNode(insnNode.opcode, insnNode.owner, "kilt\$from", insnNode.desc)
                         newNodeMap[insnNode] = node
-                    } else if (insnNode.name == "to") {
+                    } else if (insnNode.name == "field_8961" || insnNode.name == "to") {
                         val node = FieldInsnNode(insnNode.opcode, insnNode.owner, "kilt\$to", insnNode.desc)
                         newNodeMap[insnNode] = node
                     }
