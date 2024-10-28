@@ -131,7 +131,7 @@ public abstract class LivingEntityInject extends Entity implements IForgeLivingE
         var oldEffect = (MobEffectInstance) original.call(instance, o);
 
         MinecraftForge.EVENT_BUS.post(new MobEffectEvent.Added((LivingEntity) (Object) this, oldEffect, newEffect, entity));
-        return null;
+        return (V) oldEffect;
     }
 
     @Inject(method = "canBeAffected", at = @At("HEAD"), cancellable = true)
@@ -189,7 +189,7 @@ public abstract class LivingEntityInject extends Entity implements IForgeLivingE
     @ModifyExpressionValue(method = "hurt", at = @At(value = "CONSTANT", args = "intValue=1"))
     private int kilt$checkIfDamageNegative(int original, @Local(argsOnly = true) float damageAmount) {
         // why are bools handled this way
-        return ((original == 1) && (damageAmount <= 0)) ? 1 : 0;
+        return ((original == 1) && (damageAmount <= 0)) ? 1 : original;
     }
 
     // TODO: implement TamableAnimal instanceof check
@@ -249,7 +249,7 @@ public abstract class LivingEntityInject extends Entity implements IForgeLivingE
 
     // TODO: handle custom Forge sound type
 
-    @Inject(method = "actuallyHurt", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "actuallyHurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;isInvulnerableTo(Lnet/minecraft/world/damagesource/DamageSource;)Z", shift = At.Shift.AFTER), cancellable = true)
     private void kilt$cancelIfNegativeDamage(CallbackInfo ci, @Local(argsOnly = true) DamageSource source, @Local(argsOnly = true) LocalFloatRef damageAmount) {
         damageAmount.set(ForgeHooks.onLivingHurt((LivingEntity) (Object) this, source, damageAmount.get()));
 
