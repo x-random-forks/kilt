@@ -5,6 +5,8 @@ accessible class net/minecraft/server/network/ServerLoginPacketListenerImpl$Stat
 
 accessible method net/minecraft/client/renderer/texture/SpriteContents$AnimatedTexture getFrameX (I)I
 accessible method net/minecraft/client/renderer/texture/SpriteContents$AnimatedTexture getFrameY (I)I
+transitive-accessible method net/minecraft/world/entity/Entity setRemoved (Lnet/minecraft/world/entity/Entity$RemovalReason;)V
+transitive-extendable method net/minecraft/world/entity/Entity setRemoved (Lnet/minecraft/world/entity/Entity$RemovalReason;)V
 
 # Auto generated access widener from NeoForge's access transformers.
 transitive-accessible method net/minecraft/advancements/CriteriaTriggers register (Lnet/minecraft/advancements/CriterionTrigger;)Lnet/minecraft/advancements/CriterionTrigger;

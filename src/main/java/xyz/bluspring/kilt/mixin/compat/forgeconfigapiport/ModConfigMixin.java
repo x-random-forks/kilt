@@ -9,9 +9,15 @@ import xyz.bluspring.kilt.helpers.mixin.CreateInitializer;
 @Mixin(value = ModConfig.class, remap = false)
 public class ModConfigMixin {
     public ModConfigMixin(final ModConfig.Type type, final IConfigSpec<?> spec, String modId, final String fileName) {}
+    public ModConfigMixin(final ModConfig.Type type, final IConfigSpec<?> spec, String modId) {}
 
     @CreateInitializer
     public ModConfigMixin(final ModConfig.Type type, final IConfigSpec<?> spec, ModContainer mod, final String fileName) {
         this(type, spec, mod.getModId(), fileName);
+    }
+
+    @CreateInitializer
+    public ModConfigMixin(final ModConfig.Type type, final IConfigSpec<?> spec, ModContainer mod) {
+        this(type, spec, mod.getModId(), mod.getModId());
     }
 }
