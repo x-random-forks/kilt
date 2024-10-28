@@ -59,7 +59,7 @@ public abstract class SpriteContentsInject implements SpriteContentsInjection {
 
     @Mixin(targets = "net.minecraft.client.renderer.texture.SpriteContents$InterpolationData")
     public static class InterpolationDataInject {
-        @ModifyArgs(method = "<init>", at = @At(value = "NEW", target = "(IIZ)Lcom/mojang/blaze3d/platform/NativeImage;"))
+        @ModifyArgs(method = "<init>", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/NativeImage;<init>(IIZ)V"))
         private void kilt$guardFromInvalidTexSize(Args args) {
             args.set(0, Math.max(1, args.get(0)));
             args.set(1, Math.max(1, args.get(1)));
