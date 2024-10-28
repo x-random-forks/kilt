@@ -9,6 +9,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
+import com.llamalad7.mixinextras.sugar.ref.LocalDoubleRef;
 import com.llamalad7.mixinextras.sugar.ref.LocalFloatRef;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import io.github.fabricators_of_create.porting_lib.entity.extensions.EntityExtensions;
@@ -42,7 +43,10 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.extensions.IForgeLivingEntity;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.ForgeEventFactory;
-import net.minecraftforge.event.entity.living.*;
+import net.minecraftforge.event.entity.living.LivingSwapItemsEvent;
+import net.minecraftforge.event.entity.living.MobEffectEvent;
+import net.minecraftforge.event.entity.living.PotionColorCalculationEvent;
+import net.minecraftforge.event.entity.living.ShieldBlockEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.items.wrapper.EntityEquipmentInvWrapper;
 import org.jetbrains.annotations.NotNull;
@@ -54,7 +58,6 @@ import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 import xyz.bluspring.kilt.injections.CapabilityProviderInjection;
 
 import java.util.Collection;
@@ -219,46 +222,38 @@ public abstract class LivingEntityInject extends Entity implements IForgeLivingE
         return ForgeEventFactory.getExperienceDrop((LivingEntity) (Object) this, this.lastHurtByPlayer, original);
     }
 
-    @ModifyArgs(method = "knockback", at = @At("HEAD"))
-    private void kilt$modifyKnockbackArgs(Args args, @Share("event") LocalRef<LivingKnockBackEvent> eventRef) {
-        var event = ForgeHooks.onLivingKnockBack((LivingEntity) (Object) this, args.get(0), args.get(1), args.get(2));
-
-        args.set(0, event.getStrength());
-        args.set(1, event.getRatioX());
-        args.set(2, event.getRatioZ());
-        eventRef.set(event);
-    }
-
     @Inject(method = "knockback", at = @At("HEAD"), cancellable = true)
-    private void kilt$checkIfCancelledKnockback(double strength, double x, double z, CallbackInfo ci, @Share("event") LocalRef<LivingKnockBackEvent> eventRef) {
-        if (eventRef.get().isCanceled())
-            ci.cancel();
-    }
+    private void kilt$modifyKnockback(CallbackInfo ci, @Local(argsOnly = true, ordinal = 0) LocalDoubleRef strength, @Local(argsOnly = true, ordinal = 1) LocalDoubleRef x, @Local(argsOnly = true, ordinal = 2) LocalDoubleRef z) {
+        var event = ForgeHooks.onLivingKnockBack((LivingEntity) (Object) this, (float) strength.get(), x.get(), z.get());
 
-    @ModifyArgs(method = "causeFallDamage", at = @At("HEAD"))
-    private void kilt$modifyFallDamageArgs(Args args, @Share("values") LocalRef<float[]> valueRef) {
-        var values = ForgeHooks.onLivingFall((LivingEntity) (Object) this, args.get(0), args.get(1));
-        args.set(0, values[0]);
-        args.set(1, values[1]);
-        valueRef.set(values);
+        if (event.isCanceled())
+            ci.cancel();
+
+        strength.set(event.getStrength());
+        x.set(event.getRatioX());
+        z.set(event.getRatioZ());
     }
 
     @Inject(method = "causeFallDamage", at = @At("HEAD"), cancellable = true)
-    private void kilt$checkIfCancelledFallDamage(float fallDistance, float multiplier, DamageSource source, CallbackInfoReturnable<Boolean> cir, @Share("values") LocalRef<float[]> valueRef) {
-        if (valueRef.get() == null)
+    private void kilt$checkIfCancelledFallDamage(CallbackInfoReturnable<Boolean> cir, @Local(argsOnly = true, ordinal = 0) LocalFloatRef fallDistance, @Local(argsOnly = true, ordinal = 1) LocalFloatRef multiplier) {
+        var values = ForgeHooks.onLivingFall((LivingEntity) (Object) this, fallDistance.get(), multiplier.get());
+
+        if (values == null) {
             cir.setReturnValue(false);
+            return;
+        }
+
+        fallDistance.set(values[0]);
+        multiplier.set(values[1]);
     }
 
     // TODO: handle custom Forge sound type
 
-    @ModifyArg(method = "actuallyHurt", at = @At("HEAD"))
-    private float kilt$setDamageValueFromEvent(float original, @Local(argsOnly = true) DamageSource source) {
-        return ForgeHooks.onLivingHurt((LivingEntity) (Object) this, source, original);
-    }
-
     @Inject(method = "actuallyHurt", at = @At("HEAD"), cancellable = true)
-    private void kilt$cancelIfNegativeDamage(DamageSource damageSource, float damageAmount, CallbackInfo ci) {
-        if (damageAmount <= 0)
+    private void kilt$cancelIfNegativeDamage(CallbackInfo ci, @Local(argsOnly = true) DamageSource source, @Local(argsOnly = true) LocalFloatRef damageAmount) {
+        damageAmount.set(ForgeHooks.onLivingHurt((LivingEntity) (Object) this, source, damageAmount.get()));
+
+        if (damageAmount.get() <= 0)
             ci.cancel();
     }
 
