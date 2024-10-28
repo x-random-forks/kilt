@@ -190,7 +190,7 @@ class Kilt : ModInitializer {
         }
 
         LivingEntityEvents.DROPS.register { target, source, drops, level, recentlyHit ->
-            !ForgeHooks.onLivingDrops(target, source, drops, level, recentlyHit)
+            ForgeHooks.onLivingDrops(target, source, drops, level, recentlyHit)
         }
     }
 
