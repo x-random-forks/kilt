@@ -181,7 +181,7 @@ dependencies {
         }
     }
 
-    val runSodium = false
+    val runSodium = true
 
     // Runtime mods for testing
     modRuntimeOnly ("com.terraformersmc:modmenu:7.1.0") {
