@@ -32,6 +32,8 @@ public class KiltMixinPlugin implements IMixinConfigPlugin {
         MixinConstraintsBootstrap.init(mixinPackage);
 
         ExtensionRegistrar.register(new KiltMixinModifier());
+
+        Kilt.Companion.getLoader().scanMods();
     }
 
     @Override

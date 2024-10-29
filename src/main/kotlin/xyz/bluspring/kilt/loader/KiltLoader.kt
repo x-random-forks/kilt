@@ -59,7 +59,7 @@ class KiltLoader {
     // be for now.
     val modProvider: LoaderModProvider = FabricModProvider()
 
-    fun preloadMods() {
+    fun scanMods() {
         Kilt.logger.info("Scanning the mods directory for Forge mods...")
 
         val modsDir = File(FabricLoader.getInstance().gameDir.toFile(), "mods")
@@ -245,7 +245,9 @@ class KiltLoader {
 
             loadTransformers(null) // load Forge ATs
         }
+    }
 
+    fun preloadMods() {
         loadForgeBuiltinMod() // fuck you
     }
 
