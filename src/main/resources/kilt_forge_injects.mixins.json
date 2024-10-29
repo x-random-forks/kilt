@@ -182,6 +182,8 @@
         "world.level.block.LiquidBlockInject",
         "world.level.block.PoweredRailBlockInject",
         "world.level.block.StairBlockInject",
+        "world.level.block.StemBlockInject",
+        "world.level.block.StemGrownBlockInject",
         "world.level.block.entity.AbstractFurnaceBlockEntityInject",
         "world.level.block.entity.BaseContainerBlockEntityInject",
         "world.level.block.entity.BlockEntityInject",

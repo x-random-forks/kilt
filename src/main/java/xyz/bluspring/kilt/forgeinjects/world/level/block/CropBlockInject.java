@@ -18,6 +18,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.event.ForgeEventFactory;
@@ -47,11 +48,19 @@ public abstract class CropBlockInject {
         return original.call(instance, block) || instance.canSustainPlant(level, pos.offset(i, 0, j), Direction.UP, (IPlantable) block2);
     }
 
-    // i don't care that this is a wildcard, it works.
-    @Expression("? > 0")
-    @ModifyExpressionValue(method = "getGrowthSpeed", at = @At("MIXINEXTRAS:EXPRESSION"))
-    private static boolean kilt$callForgePreGrow(boolean original, @Local BlockState state, @Local(argsOnly = true) BlockGetter level, @Local(argsOnly = true) BlockPos pos, @Local(ordinal = 0) int i, @Local(ordinal = 1) int j) {
-        return original || state.isFertile(level, pos.offset(i, 0, j));
+    @WrapOperation(method = "getGrowthSpeed", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;getValue(Lnet/minecraft/world/level/block/state/properties/Property;)Ljava/lang/Comparable;"))
+    private static Comparable<Integer> kilt$callForgePreGrow(BlockState state, Property<Integer> property, Operation<Comparable<Integer>> original, @Local(argsOnly = true) BlockGetter level, @Local(argsOnly = true) BlockPos pos, @Local(ordinal = 0) int i, @Local(ordinal = 1) int j) {
+        Comparable<Integer> value = 0;
+
+        if (state.hasProperty(property)) {
+            value = original.call(state, property);
+        }
+
+        if (state.isFertile(level, pos.offset(i, 0, j))) {
+            return 15;
+        }
+
+        return value;
     }
 
     @WrapOperation(method = "entityInside", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/GameRules;getBoolean(Lnet/minecraft/world/level/GameRules$Key;)Z"))
