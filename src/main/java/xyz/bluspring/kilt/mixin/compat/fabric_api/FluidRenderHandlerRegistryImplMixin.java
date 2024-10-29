@@ -14,7 +14,7 @@ public class FluidRenderHandlerRegistryImplMixin {
     @Inject(method = "get", at = @At("HEAD"), cancellable = true)
     public void kilt$useForgeHandler(Fluid fluid, CallbackInfoReturnable<FluidRenderHandler> cir) {
         try {
-            var fluidType = fluid.forge$getFluidType();
+            var fluidType = fluid.getFluidType();
 
             cir.setReturnValue(FluidHandlerWorkaround.INSTANCE.getFluidRenderHandler(fluidType));
         } catch (Exception ignored) {}
@@ -23,7 +23,7 @@ public class FluidRenderHandlerRegistryImplMixin {
     @Inject(method = "getOverride", at = @At("HEAD"), cancellable = true)
     public void kilt$useForgeOverrides(Fluid fluid, CallbackInfoReturnable<FluidRenderHandler> cir) {
         try {
-            var fluidType = fluid.forge$getFluidType();
+            var fluidType = fluid.getFluidType();
 
             cir.setReturnValue(FluidHandlerWorkaround.INSTANCE.getFluidRenderHandler(fluidType));
         } catch (Exception ignored) {}

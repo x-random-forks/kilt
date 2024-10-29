@@ -85,8 +85,8 @@ public abstract class BucketItemInject extends Item implements BucketItemInjecti
         // TODO: figure out how to capture bl2
         var bl2 = state.isAir() || bl || block instanceof LiquidBlockContainer && ((LiquidBlockContainer)block).canPlaceLiquid(level, pos, state, this.content);
 
-        if (bl2 && containedFluidStack.isPresent() && this.content.forge$getFluidType().isVaporizedOnPlacement(level, pos, containedFluidStack.get())) {
-            this.content.forge$getFluidType().onVaporize(player, level, pos, containedFluidStack.get());
+        if (bl2 && containedFluidStack.isPresent() && this.content.getFluidType().isVaporizedOnPlacement(level, pos, containedFluidStack.get())) {
+            this.content.getFluidType().onVaporize(player, level, pos, containedFluidStack.get());
 
             cir.setReturnValue(true);
         }

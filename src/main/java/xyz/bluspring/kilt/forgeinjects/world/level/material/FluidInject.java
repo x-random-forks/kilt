@@ -7,15 +7,14 @@ import net.minecraftforge.common.extensions.IForgeFluid;
 import net.minecraftforge.fluids.FluidType;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(Fluid.class)
 public abstract class FluidInject implements IForgeFluid {
-    @Unique private FluidType forgeFluidType;
+    private FluidType forgeFluidType;
 
     @NotNull
     @Override
-    public FluidType forge$getFluidType() {
+    public FluidType getFluidType() {
         if (forgeFluidType == null)
             forgeFluidType = ForgeHooks.getVanillaFluidType((Fluid) (Object) this);
 

@@ -8,7 +8,6 @@ object WorkaroundFixer {
 
     fun fixClass(classNode: ClassNode) {
         val methodReplace = mutableListOf<MethodNode>()
-        val methodsToRename = mutableListOf<MethodNode>()
 
         for (method in classNode.methods) {
             val newNodeMap = mutableMapOf<AbstractInsnNode, AbstractInsnNode>()
@@ -30,14 +29,7 @@ object WorkaroundFixer {
                         val node = FieldInsnNode(insnNode.opcode, insnNode.owner, "kilt\$to", insnNode.desc)
                         newNodeMap[insnNode] = node
                     }
-                } else if (insnNode is MethodInsnNode && insnNode.name == "getFluidType") {
-                    val node = MethodInsnNode(insnNode.opcode, insnNode.owner, "forge\$getFluidType", insnNode.desc)
-                    newNodeMap[insnNode] = node
                 }
-            }
-
-            if (method.name == "getFluidType" && method.desc == "()Lnet/minecraftforge/fluids/FluidType;") {
-                methodsToRename.add(method)
             }
 
             if (newNodeMap.isNotEmpty()) {
@@ -49,12 +41,7 @@ object WorkaroundFixer {
             }
         }
 
-        classNode.methods.removeIf { methodReplace.any { a -> it.name == a.name && a.desc == it.desc } || methodsToRename.any { a -> it.name == a.name && a.desc == it.desc } }
+        classNode.methods.removeIf { methodReplace.any { a -> it.name == a.name && a.desc == it.desc } }
         classNode.methods.addAll(methodReplace)
-
-        for (methodNode in methodsToRename) {
-            methodNode.name = "forge\$${methodNode.name}"
-            classNode.methods.add(methodNode)
-        }
     }
 }
