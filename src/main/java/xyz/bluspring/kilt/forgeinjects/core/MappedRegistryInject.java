@@ -7,6 +7,7 @@ import com.mojang.serialization.Lifecycle;
 import net.minecraft.core.Holder;
 import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.Registry;
+import net.minecraft.core.WritableRegistry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
@@ -22,12 +23,10 @@ import java.util.Map;
 import java.util.Set;
 
 @Mixin(MappedRegistry.class)
-public class MappedRegistryInject<T> implements MappedRegistryInjection {
+public abstract class MappedRegistryInject<T> implements MappedRegistryInjection, WritableRegistry<T> {
     @Shadow public boolean frozen;
 
     @Shadow @Nullable public Map<T, Holder.Reference<T>> unregisteredIntrusiveHolders;
-    @CreateStatic
-    private static final Set<ResourceLocation> knownRegistries = MappedRegistryInjection.knownRegistries;
 
     @CreateStatic
     private static Set<ResourceLocation> getKnownRegistries() {
@@ -41,7 +40,7 @@ public class MappedRegistryInject<T> implements MappedRegistryInjection {
 
     @Override
     public void markKnown() {
-        MappedRegistryInjection.getKnownRegistries().add(((Registry) (Object) this).key().location());
+        MappedRegistryInjection.knownRegistries.add(this.key().location());
     }
 
     @Override
