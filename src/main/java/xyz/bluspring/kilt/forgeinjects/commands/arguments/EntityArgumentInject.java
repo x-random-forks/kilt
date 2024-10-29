@@ -1,0 +1,17 @@
+package xyz.bluspring.kilt.forgeinjects.commands.arguments;
+
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraftforge.common.ForgeHooks;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+
+@Mixin(EntityArgument.class)
+public abstract class EntityArgumentInject {
+    @WrapOperation(method = "listSuggestions", at = @At(value = "INVOKE", target = "Lnet/minecraft/commands/SharedSuggestionProvider;hasPermission(I)Z"))
+    private boolean kilt$checkIfCanUseSelectors(SharedSuggestionProvider instance, int i, Operation<Boolean> original) {
+        return original.call(instance, i) || ForgeHooks.canUseEntitySelectors(instance);
+    }
+}
