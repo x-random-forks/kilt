@@ -63,9 +63,11 @@ object EventEmptyInitializerFixer {
         if (!isStatic) {
             // There exists an inner "this" that is invisible at compile-time, and is initialized
             // using the params provided by the initializer.
-            initMethod.visitVarInsn(Opcodes.ALOAD, 0)
-            initMethod.visitVarInsn(Opcodes.ALOAD, 1)
-            initMethod.visitFieldInsn(Opcodes.PUTFIELD, classNode.name, "this$0", "L${classNode.outerClass};")
+            for ((i, fieldNode) in classNode.fields.filter { it.name.startsWith("this\$") }.withIndex()) {
+                initMethod.visitVarInsn(Opcodes.ALOAD, 0)
+                initMethod.visitVarInsn(Opcodes.ALOAD, i + 1)
+                initMethod.visitFieldInsn(Opcodes.PUTFIELD, classNode.name, fieldNode.name, fieldNode.desc)
+            }
         }
 
         initMethod.visitVarInsn(Opcodes.ALOAD, 0)
