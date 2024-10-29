@@ -145,7 +145,7 @@ dependencies {
     include(implementation("com.moulberry:mixinconstraints:${property("mixinconstraints_version")}")!!)
 
     // Forge stuff
-    implementation(include("net.minecraftforge:eventbus:${property("eventbus_version")}") {
+    implementation(include("xyz.bluspring:eventbus:${property("eventbus_version")}") {
         exclude("cpw.mods", "modlauncher")
         exclude("net.minecraftforge", "modlauncher")
         exclude("net.minecraftforge", "securemodules")
