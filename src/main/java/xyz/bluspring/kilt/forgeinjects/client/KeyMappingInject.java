@@ -2,9 +2,12 @@
 package xyz.bluspring.kilt.forgeinjects.client;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.mojang.blaze3d.platform.InputConstants;
 import io.github.fabricators_of_create.porting_lib.mixin.accessors.client.accessor.KeyMappingAccessor;
 import net.minecraft.client.KeyMapping;
@@ -31,12 +34,9 @@ public abstract class KeyMappingInject implements IForgeKeyMapping {
     @Shadow private InputConstants.Key key;
     @Shadow @Final private static Map<InputConstants.Key, KeyMapping> MAP;
     @Unique private static final KeyMappingLookup FORGE_MAP = new KeyMappingLookup();
-    @Mutable
-    @Shadow @Final private String name;
-    @Mutable
-    @Shadow @Final private InputConstants.Key defaultKey;
-    @Mutable
-    @Shadow @Final private String category;
+    @Mutable @Shadow @Final private String name;
+    @Mutable @Shadow @Final private InputConstants.Key defaultKey;
+    @Mutable @Shadow @Final private String category;
     @Shadow @Final private static Map<String, KeyMapping> ALL;
     @Shadow @Final private static Set<String> CATEGORIES;
     @Shadow @Final private static Map<String, Integer> CATEGORY_SORT_ORDER;
@@ -170,11 +170,9 @@ public abstract class KeyMappingInject implements IForgeKeyMapping {
         FORGE_MAP.put(((KeyMappingAccessor) mapping).port_lib$getKey(), mapping);
     }
 
-    @WrapOperation(method = "getTranslatedKeyMessage", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/InputConstants$Key;getDisplayName()Lnet/minecraft/network/chat/Component;"))
-    private Component kilt$addKeyModifierToMessage(InputConstants.Key instance, Operation<Component> original) {
-        return this.getKeyModifier().getCombinedName(instance, () -> {
-            return original.call(instance);
-        });
+    @WrapMethod(method = "getTranslatedKeyMessage")
+    private Component kilt$addKeyModifierToMessage(Operation<Component> original) {
+        return this.getKeyModifier().getCombinedName(this.key, original::call);
     }
 
     @ModifyReturnValue(method = "isDefault", at = @At("RETURN"))
@@ -187,29 +185,45 @@ public abstract class KeyMappingInject implements IForgeKeyMapping {
         return original && this.isConflictContextAndModifierActive();
     }
 
-    /**
-     * @author BluSpring
-     * @reason No other way to do this check, I think?
-     */
-    @Overwrite
-    public static void set(InputConstants.Key key, boolean held) {
+    @WrapMethod(method = "click")
+    private static void kilt$wrapKeyClick(InputConstants.Key key, Operation<Void> original, @Share("currentMap") LocalRef<KeyMapping> currentMap) {
         for (KeyMapping keyMapping : FORGE_MAP.getAll(key)) {
-            if (keyMapping != null) {
-                keyMapping.setDown(held);
-            }
+            currentMap.set(keyMapping);
+            original.call(key);
         }
     }
 
-    /**
-     * @author BluSpring
-     * @reason No other way to do this check, I think?
-     */
-    @Overwrite
-    public static void click(InputConstants.Key key) {
-        for (KeyMapping keyMapping : FORGE_MAP.getAll(key)) {
-            if (keyMapping != null) {
-                ((xyz.bluspring.kilt.mixin.KeyMappingAccessor) keyMapping).setClickCount(((xyz.bluspring.kilt.mixin.KeyMappingAccessor) keyMapping).getClickCount() + 1);
-            }
+    @WrapOperation(method = "click", at = @At(value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;"))
+    private static <K, V> V kilt$useForgeMappingIfPossibleForClick(Map<K, V> instance, K o, Operation<V> original, @Share("currentMap") LocalRef<KeyMapping> currentMap) {
+        if (currentMap.get() != null) {
+            return (V) currentMap.get();
         }
+
+        //noinspection MixinExtrasOperationParameters
+        return original.call(instance, o);
+    }
+
+    @WrapMethod(method = "set")
+    private static void kilt$wrapKeySet(InputConstants.Key key, boolean held, Operation<Void> original, @Share("currentMap") LocalRef<KeyMapping> currentMap) {
+        for (KeyMapping keyMapping : FORGE_MAP.getAll(key)) {
+            currentMap.set(keyMapping);
+            original.call(key, held);
+        }
+    }
+
+    @WrapOperation(method = "set", at = @At(value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;"))
+    private static <K, V> V kilt$useForgeMappingIfPossible(Map<K, V> instance, K o, Operation<V> original, @Share("currentMap") LocalRef<KeyMapping> currentMap) {
+        if (currentMap.get() != null) {
+            return (V) currentMap.get();
+        }
+
+        //noinspection MixinExtrasOperationParameters
+        return original.call(instance, o);
+    }
+
+    // Kilt-exclusive injects
+    @Inject(method = "<init>(Ljava/lang/String;Lcom/mojang/blaze3d/platform/InputConstants$Type;ILjava/lang/String;)V", at = @At("TAIL"))
+    private void kilt$addKeyValueInForgeMap(String name, InputConstants.Type type, int keyCode, String category, CallbackInfo ci) {
+        FORGE_MAP.put(this.key, (KeyMapping) (Object) this);
     }
 }
