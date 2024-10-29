@@ -2,6 +2,7 @@ package xyz.bluspring.kilt.loader
 
 import com.electronwill.nightconfig.core.CommentedConfig
 import com.electronwill.nightconfig.toml.TomlParser
+import com.google.common.graph.GraphBuilder
 import com.google.gson.JsonParser
 import net.fabricmc.api.EnvType
 import net.fabricmc.loader.api.FabricLoader
@@ -23,6 +24,7 @@ import net.minecraftforge.fml.loading.moddiscovery.ModAnnotation
 import net.minecraftforge.fml.loading.moddiscovery.ModClassVisitor
 import net.minecraftforge.fml.loading.moddiscovery.ModFileInfo
 import net.minecraftforge.fml.loading.moddiscovery.NightConfigWrapper
+import net.minecraftforge.fml.loading.toposort.TopologicalSort
 import net.minecraftforge.forgespi.language.IModInfo
 import net.minecraftforge.forgespi.language.IModInfo.DependencySide
 import net.minecraftforge.forgespi.language.MavenVersionAdapter
@@ -245,6 +247,35 @@ class KiltLoader {
 
             loadTransformers(null) // load Forge ATs
         }
+
+        sortMods(modLoadingQueue)
+    }
+
+    private fun sortMods(queue: ConcurrentLinkedQueue<ForgeMod>) {
+        val graph = GraphBuilder.directed().build<ForgeMod>()
+
+        for (mod in queue) {
+            graph.addNode(mod)
+        }
+
+        for (mod in queue) {
+            for (dep in mod.dependencies) {
+                val associatedMod = queue.firstOrNull { it.modId == dep.modId } ?: continue
+
+                if (associatedMod == mod)
+                    continue
+
+                if (dep.ordering == IModInfo.Ordering.BEFORE) {
+                    graph.putEdge(mod, associatedMod)
+                } else if (dep.ordering == IModInfo.Ordering.AFTER) {
+                    graph.putEdge(associatedMod, mod)
+                }
+            }
+        }
+
+        val sorted = TopologicalSort.topologicalSort(graph, null)
+        queue.clear()
+        queue.addAll(sorted)
     }
 
     fun preloadMods() {
