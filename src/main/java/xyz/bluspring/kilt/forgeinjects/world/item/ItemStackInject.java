@@ -7,9 +7,12 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.ItemLike;
+import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.ToolAction;
 import net.minecraftforge.common.capabilities.CapabilityProvider;
 import net.minecraftforge.common.capabilities.ICapabilityProviderImpl;
@@ -27,6 +30,7 @@ import xyz.bluspring.kilt.injections.CapabilityProviderInjection;
 import xyz.bluspring.kilt.injections.item.ItemStackInjection;
 
 import java.util.Objects;
+import java.util.function.Function;
 
 @Mixin(ItemStack.class)
 @Extends(CapabilityProvider.class)
@@ -47,6 +51,8 @@ public abstract class ItemStackInject implements IForgeItemStack, CapabilityProv
     @Shadow private int count;
 
     @Shadow public abstract Item getItem();
+
+    @Shadow public abstract InteractionResult useOn(UseOnContext context);
 
     public ItemStackInject(ItemLike item, int count) {}
 
@@ -105,6 +111,41 @@ public abstract class ItemStackInject implements IForgeItemStack, CapabilityProv
             return original.call(instance);
 
         return this.delegate.value();
+    }
+
+    @Unique private Function<UseOnContext, InteractionResult> kilt$callback;
+
+    @Inject(method = "useOn", at = @At("HEAD"), cancellable = true)
+    private void kilt$tryPlaceItemInWorld(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
+        if (!context.getLevel().isClientSide()) {
+            cir.setReturnValue(ForgeHooks.onPlaceItemIntoWorld(context));
+        }
+    }
+
+    public InteractionResult onItemUseFirst(UseOnContext context) {
+        this.kilt$callback = c -> this.getItem().onItemUseFirst((ItemStack) (Object) this, c);
+        return this.useOn(context);
+    }
+
+    @WrapOperation(method = "useOn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/Item;useOn(Lnet/minecraft/world/item/context/UseOnContext;)Lnet/minecraft/world/InteractionResult;"))
+    private InteractionResult kilt$tryUseOnCallback(Item instance, UseOnContext context, Operation<InteractionResult> original) {
+        if (kilt$callback != null) {
+            var value = kilt$callback.apply(context);
+            kilt$callback = null;
+
+            return value;
+        }
+
+        return original.call(instance, context);
+    }
+
+    @Inject(method = "save", at = @At("TAIL"))
+    private void kilt$addForgeCapData(CompoundTag compoundTag, CallbackInfoReturnable<CompoundTag> cir) {
+        var capNbt = this.serializeCaps();
+
+        if (capNbt != null && !capNbt.isEmpty()) {
+            compoundTag.put("ForgeCaps", capNbt);
+        }
     }
 
     private void forgeInit() {
