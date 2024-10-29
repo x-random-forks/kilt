@@ -21,10 +21,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.model.data.ModelData;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.*;
 
 import java.util.List;
 import java.util.Objects;
@@ -32,6 +29,7 @@ import java.util.Objects;
 @IfModLoaded("sodium")
 @Mixin(BlockRenderer.class)
 public abstract class BlockRendererMixin {
+    @Unique private static final Object lock = new Object();
 
     @Shadow(remap = false) @Final private ColorProviderRegistry colorProviderRegistry;
 
@@ -53,7 +51,10 @@ public abstract class BlockRendererMixin {
      */
     @Overwrite(remap = false)
     public void renderModel(BlockRenderContext ctx, ChunkBuildBuffers buffers) {
-        var data = Objects.requireNonNullElse(ctx.world().getModelDataManager().getAt(ctx.pos()), ModelData.EMPTY);
+        ModelData data;
+        synchronized (lock) {
+            data = Objects.requireNonNullElse(ctx.world().getModelDataManager().getAt(ctx.pos()), ModelData.EMPTY);
+        }
 
         ColorProvider<BlockState> colorizer = this.colorProviderRegistry.getColorProvider(ctx.state().getBlock());
 
