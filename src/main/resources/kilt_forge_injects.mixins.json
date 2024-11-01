@@ -90,6 +90,7 @@
         "world.entity.EntityInject",
         "world.entity.EntityTypeInject",
         "world.entity.EntityTypeInject$BuilderInject",
+        "world.entity.LightningBoltInject",
         "world.entity.LivingEntityInject",
         "world.entity.MobCategoryInject",
         "world.entity.MobInject",
@@ -107,6 +108,7 @@
         "world.entity.vehicle.AbstractMinecartInject",
         "world.entity.vehicle.BoatInject",
         "world.entity.vehicle.ChestBoatInject",
+        "world.food.FoodDataInject",
         "world.food.FoodPropertiesInject",
         "world.food.FoodPropertiesInject$BuilderInject",
         "world.inventory.AnvilMenuInject",
@@ -208,6 +210,7 @@
         "world.level.material.FluidInject",
         "world.level.material.FluidStateInject",
         "world.level.pathfinder.BlockPathTypesInject",
+        "world.level.saveddata.maps.MapDecorationInject",
         "world.level.storage.PlayerDataStorageInject"
     ],
     "client": [
