@@ -8,8 +8,11 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(FluidType.class)
 public interface FluidTypeAccessor {
-    @Accessor
-    String getDescriptionId();
+    @Accessor("descriptionId")
+    String kilt$getDescriptionId();
+
+    @Accessor("descriptionId")
+    void kilt$setDescriptionId(String id);
 
     @Accessor
     double getMotionScale();

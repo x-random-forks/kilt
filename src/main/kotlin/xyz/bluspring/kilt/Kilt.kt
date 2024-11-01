@@ -30,6 +30,7 @@ import xyz.bluspring.kilt.client.KiltClient
 import xyz.bluspring.kilt.interop.transfer.TransferInterop
 import xyz.bluspring.kilt.loader.KiltLoader
 import xyz.bluspring.kilt.mixin.MinecraftServerAccessor
+import xyz.bluspring.kilt.util.DeltaTimeProfiler
 import java.util.*
 
 class Kilt : ModInitializer {
@@ -37,6 +38,7 @@ class Kilt : ModInitializer {
         registerFabricEvents()
 
         TransferInterop.init()
+        DeltaTimeProfiler.popAll()
     }
 
     @Suppress("removal")

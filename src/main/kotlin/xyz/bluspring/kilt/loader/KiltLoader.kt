@@ -30,6 +30,7 @@ import net.minecraftforge.forgespi.language.IModInfo.DependencySide
 import net.minecraftforge.forgespi.language.MavenVersionAdapter
 import net.minecraftforge.forgespi.language.ModFileScanData
 import net.minecraftforge.registries.ForgeRegistries
+import net.minecraftforge.registries.GameData
 import org.apache.maven.artifact.versioning.ArtifactVersion
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion
 import org.objectweb.asm.ClassReader
@@ -50,6 +51,7 @@ import java.util.function.Consumer
 import java.util.jar.JarFile
 import java.util.jar.Manifest
 import java.util.zip.ZipFile
+import kotlin.io.path.toPath
 import kotlin.system.exitProcess
 
 class KiltLoader {
@@ -253,6 +255,14 @@ class KiltLoader {
         }
 
         sortMods(modLoadingQueue)
+
+        DeltaTimeProfiler.push("addToClassPath")
+        for (mod in modLoadingQueue) {
+            Kilt.loader.addModToFabric(mod)
+            FabricLauncherBase.getLauncher().addToClassPath(mod.remappedModFile.toURI().toPath())
+        }
+        DeltaTimeProfiler.pop()
+
         DeltaTimeProfiler.pop()
     }
 
@@ -793,7 +803,13 @@ class KiltLoader {
             ModLoader.get().kiltPostEventWrappingModsBuildEvent { FMLCommonSetupEvent(it, ModLoadingStage.COMMON_SETUP) }
 
             DeltaTimeProfiler.push("runTasks")
+
+            // Kilt: this doesn't match Forge, but if we don't do this, some mods are unable to register
+            //       in the loot function types.
+            GameData.unfreezeData()
             ModLoadingStage.COMMON_SETUP.deferredWorkQueue.runTasks()
+            GameData.freezeData()
+
             DeltaTimeProfiler.pop()
 
             // SIDED_SETUP

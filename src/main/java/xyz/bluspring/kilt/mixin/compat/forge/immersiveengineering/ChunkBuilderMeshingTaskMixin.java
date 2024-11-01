@@ -1,4 +1,4 @@
-package xyz.bluspring.kilt.mixin.compat.immersive_engineering;
+package xyz.bluspring.kilt.mixin.compat.forge.immersiveengineering;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import com.moulberry.mixinconstraints.annotations.IfModLoaded;

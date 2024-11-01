@@ -109,7 +109,6 @@ class ModLoader {
 
     fun finishMods(syncExecutor: ModWorkManager.DrivenExecutor, parallelExecutor: Executor, periodicTask: Runnable) {
         Kilt.loader.runPhaseExecutors(ModLoadingPhase.COMPLETE)
-        DeltaTimeProfiler.dumpTree()
     }
 
     companion object {

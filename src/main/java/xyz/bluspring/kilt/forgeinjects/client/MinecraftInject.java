@@ -1,6 +1,9 @@
 // TRACKED HASH: 8a008dde196be8f110c6df462a387035cbfd879c
 package xyz.bluspring.kilt.forgeinjects.client;
 
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.Timer;
@@ -11,10 +14,14 @@ import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.client.searchtree.SearchRegistry;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.client.CreativeModeTabSearchRegistry;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.extensions.IForgeMinecraft;
 import net.minecraftforge.client.loading.ClientModLoader;
 import net.minecraftforge.event.ForgeEventFactory;
+import net.minecraftforge.fml.ModLoader;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -22,6 +29,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import xyz.bluspring.kilt.client.ClientStartingCallback;
 import xyz.bluspring.kilt.injections.client.MinecraftInjection;
+
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 
 @Mixin(Minecraft.class)
 public abstract class MinecraftInject implements MinecraftInjection, IForgeMinecraft {
@@ -83,6 +94,21 @@ public abstract class MinecraftInject implements MinecraftInjection, IForgeMinec
         ClientModLoader.begin((Minecraft) (Object) this, this.resourcePackRepository, this.resourceManager);
     }
 
+    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;<init>(Lnet/minecraft/client/Minecraft;Lnet/minecraft/client/renderer/entity/EntityRenderDispatcher;Lnet/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher;Lnet/minecraft/client/renderer/RenderBuffers;)V", shift = At.Shift.AFTER))
+    private void kilt$postRegisterStageEvent(GameConfig gameConfig, CallbackInfo ci) {
+        ModLoader.get().postEvent(new net.minecraftforge.client.event.RenderLevelStageEvent.RegisterStageEvent());
+    }
+
+    @WrapWithCondition(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;createSearchTrees()V"))
+    private boolean kilt$delayModdedSearchTrees(Minecraft instance) {
+        return false;
+    }
+
+    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/particle/ParticleEngine;<init>(Lnet/minecraft/client/multiplayer/ClientLevel;Lnet/minecraft/client/renderer/texture/TextureManager;)V", shift = At.Shift.BY, by = 2))
+    private void kilt$postRegisterParticleProviders(GameConfig gameConfig, CallbackInfo ci) {
+        ForgeHooksClient.onRegisterParticleProviders(this.particleEngine);
+    }
+
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V", ordinal = 0, shift = At.Shift.BEFORE), method = "runTick")
     public void kilt$setPartialTicks(boolean bl, CallbackInfo ci) {
         realPartialTick = this.pause ? this.pausePartialTick : this.timer.partialTick;
@@ -97,5 +123,59 @@ public abstract class MinecraftInject implements MinecraftInjection, IForgeMinec
     @Inject(method = "method_29338", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;onGameLoadFinished()V"))
     private void kilt$finishModLoading(CallbackInfo ci) {
         ClientModLoader.completeModLoading();
+    }
+
+    @Unique private Map<CreativeModeTab, SearchRegistry.Key<ItemStack>> kilt$nameSearchKeys;
+    @Unique private Map<CreativeModeTab, SearchRegistry.Key<ItemStack>> kilt$tagSearchKeys;
+    @Unique private SearchRegistry.Key<ItemStack> kilt$nameSearchKey;
+    @Unique private SearchRegistry.Key<ItemStack> kilt$tagSearchKey;
+
+    @Inject(method = "createSearchTrees", at = @At("HEAD"))
+    private void kilt$storeNameSearchKeys(CallbackInfo ci) {
+        this.kilt$nameSearchKeys = CreativeModeTabSearchRegistry.getNameSearchKeys();
+        this.kilt$tagSearchKeys = CreativeModeTabSearchRegistry.getTagSearchKeys();
+    }
+
+    @WrapOperation(method = "createSearchTrees", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/searchtree/SearchRegistry;register(Lnet/minecraft/client/searchtree/SearchRegistry$Key;Lnet/minecraft/client/searchtree/SearchRegistry$TreeBuilderSupplier;)V", ordinal = 0))
+    private <T> void kilt$searchMultipleNameKeys(SearchRegistry instance, SearchRegistry.Key<T> key, SearchRegistry.TreeBuilderSupplier<T> factory, Operation<Void> original) {
+        for (SearchRegistry.Key<ItemStack> nameSearchKey : this.kilt$nameSearchKeys.values()) {
+            original.call(instance, nameSearchKey, factory);
+        }
+    }
+
+    @WrapOperation(method = "createSearchTrees", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/searchtree/SearchRegistry;register(Lnet/minecraft/client/searchtree/SearchRegistry$Key;Lnet/minecraft/client/searchtree/SearchRegistry$TreeBuilderSupplier;)V", ordinal = 1))
+    private <T> void kilt$searchMultipleTagKeys(SearchRegistry instance, SearchRegistry.Key<T> key, SearchRegistry.TreeBuilderSupplier<T> factory, Operation<Void> original) {
+        for (SearchRegistry.Key<ItemStack> tagSearchKey : this.kilt$tagSearchKeys.values()) {
+            original.call(instance, tagSearchKey, factory);
+        }
+    }
+
+    @WrapOperation(method = "createSearchTrees", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/CreativeModeTab;setSearchTreeBuilder(Ljava/util/function/Consumer;)V"))
+    private void kilt$setMultipleSearchTreeBuilders(CreativeModeTab instance, Consumer<List<ItemStack>> searchTreeBuilder, Operation<Void> original) {
+        this.kilt$nameSearchKeys.forEach((tab, nameSearchKey) -> {
+            this.kilt$nameSearchKey = nameSearchKey;
+            this.kilt$tagSearchKey = this.kilt$tagSearchKeys.get(tab);
+
+            original.call(tab, searchTreeBuilder);
+
+            this.kilt$nameSearchKey = null;
+            this.kilt$tagSearchKey = null;
+        });
+    }
+
+    @WrapOperation(method = "method_46740", at = @At(value = "FIELD", target = "Lnet/minecraft/client/searchtree/SearchRegistry;CREATIVE_NAMES:Lnet/minecraft/client/searchtree/SearchRegistry$Key;"))
+    private SearchRegistry.Key<ItemStack> kilt$useNameSearchKey(Operation<SearchRegistry.Key<ItemStack>> original) {
+        if (this.kilt$nameSearchKey == null)
+            return original.call();
+
+        return this.kilt$nameSearchKey;
+    }
+
+    @WrapOperation(method = "method_46740", at = @At(value = "FIELD", target = "Lnet/minecraft/client/searchtree/SearchRegistry;CREATIVE_TAGS:Lnet/minecraft/client/searchtree/SearchRegistry$Key;"))
+    private SearchRegistry.Key<ItemStack> kilt$useTagSearchKey(Operation<SearchRegistry.Key<ItemStack>> original) {
+        if (this.kilt$tagSearchKey == null)
+            return original.call();
+
+        return this.kilt$tagSearchKey;
     }
 }

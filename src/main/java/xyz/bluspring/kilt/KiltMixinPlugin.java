@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.MixinExtrasBootstrap;
 import com.moulberry.mixinconstraints.MixinConstraints;
 import com.moulberry.mixinconstraints.mixin.MixinConstraintsBootstrap;
 import cpw.mods.niofs.union.KiltUnionFileSystemHelper;
+import kotlin.text.StringsKt;
 import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
@@ -47,8 +48,9 @@ public class KiltMixinPlugin implements IMixinConfigPlugin {
             return true;
         }
 
-        if (mixinClassName.contains("immersive_engineering")) {
-            return Kilt.Companion.getLoader().hasMod("immersiveengineering") && MixinConstraints.shouldApplyMixin(targetClassName, mixinClassName);
+        if (mixinClassName.contains("compat.forge.")) {
+            var modId = StringsKt.removePrefix(mixinClassName, "xyz.bluspring.kilt.mixin.compat.forge.").split("\\.")[0];
+            return Kilt.Companion.getLoader().hasMod(modId) && MixinConstraints.shouldApplyMixin(targetClassName, mixinClassName);
         }
 
         return MixinConstraints.shouldApplyMixin(targetClassName, mixinClassName);
