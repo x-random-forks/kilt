@@ -11,6 +11,7 @@ import net.minecraftforge.forgespi.language.IModInfo
 import net.minecraftforge.forgespi.locating.ForgeFeature
 import xyz.bluspring.kilt.Kilt
 import xyz.bluspring.kilt.loader.mod.ForgeMod
+import xyz.bluspring.kilt.util.DeltaTimeProfiler
 import java.util.concurrent.Executor
 import java.util.function.BiConsumer
 import java.util.function.Function
@@ -98,10 +99,17 @@ class ModLoader {
     }
 
     fun loadMods(syncExecutor: ModWorkManager.DrivenExecutor, parallelExecutor: Executor, periodicTask: Runnable) {
-        Kilt.loader.runPhaseExecutors(ModLoadingPhase.LOAD)
+        try {
+            Kilt.loader.runPhaseExecutors(ModLoadingPhase.LOAD)
+        } catch (e: Exception) {
+            DeltaTimeProfiler.popAll()
+            throw e
+        }
     }
+
     fun finishMods(syncExecutor: ModWorkManager.DrivenExecutor, parallelExecutor: Executor, periodicTask: Runnable) {
         Kilt.loader.runPhaseExecutors(ModLoadingPhase.COMPLETE)
+        DeltaTimeProfiler.dumpTree()
     }
 
     companion object {

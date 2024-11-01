@@ -13,6 +13,7 @@ import xyz.bluspring.kilt.loader.mixin.KiltMixinLoader
 import xyz.bluspring.kilt.loader.remap.ObjectHolderDefinalizer
 import xyz.bluspring.kilt.loader.remap.fixers.EventClassVisibilityFixer
 import xyz.bluspring.kilt.loader.remap.fixers.EventEmptyInitializerFixer
+import xyz.bluspring.kilt.util.DeltaTimeProfiler
 import xyz.bluspring.kilt.util.KiltHelper
 import java.lang.reflect.Modifier
 
@@ -274,6 +275,7 @@ class KiltEarlyRiser : Runnable {
             }
         }
 
+        DeltaTimeProfiler.push("preLaunch")
         try {
             Kilt.loader.preloadMods()
             KiltMixinLoader.init(Kilt.loader.modLoadingQueue.stream().toList())
@@ -284,6 +286,7 @@ class KiltEarlyRiser : Runnable {
 
             throw e
         }
+        DeltaTimeProfiler.pop()
     }
 
     private val ignoredKeywords = listOf("kilt", "fml", "mixin")

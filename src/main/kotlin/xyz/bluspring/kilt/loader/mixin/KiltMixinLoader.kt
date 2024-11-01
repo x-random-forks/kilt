@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.FabricUtil
 import org.spongepowered.asm.mixin.Mixins
 import xyz.bluspring.kilt.Kilt
 import xyz.bluspring.kilt.loader.mod.ForgeMod
+import xyz.bluspring.kilt.util.DeltaTimeProfiler
 import kotlin.io.path.toPath
 
 object KiltMixinLoader {
@@ -14,6 +15,8 @@ object KiltMixinLoader {
     val forgeMixinPackages = mutableListOf<String>()
 
     fun init(mods: List<ForgeMod>) {
+        DeltaTimeProfiler.push("loadForgeMixin")
+
         val configToModMap = mutableMapOf<String, ModContainerImpl>()
 
         mods.forEach { mod ->
@@ -48,5 +51,7 @@ object KiltMixinLoader {
 
             forgeMixinPackages.add(config.mixinPackage)
         }
+
+        DeltaTimeProfiler.pop()
     }
 }

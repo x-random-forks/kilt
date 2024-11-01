@@ -148,9 +148,7 @@ object KiltRemapper {
 
         val exceptions = mutableListOf<Exception>()
 
-        val modRemapQueue = ArrayList<ForgeMod>(modLoadingQueue.size).apply {
-            addAll(modLoadingQueue)
-        }
+        val modRemapQueue = ArrayList(modLoadingQueue)
 
         // Sort according to what dependencies are required and should be loaded first.
         // If a mod fails to remap because a dependency isn't listed, welp,

@@ -41,6 +41,7 @@ import xyz.bluspring.kilt.loader.mod.ForgeMod
 import xyz.bluspring.kilt.loader.mod.LoaderModProvider
 import xyz.bluspring.kilt.loader.mod.fabric.FabricModProvider
 import xyz.bluspring.kilt.loader.remap.KiltRemapper
+import xyz.bluspring.kilt.util.DeltaTimeProfiler
 import xyz.bluspring.kilt.util.KiltHelper
 import java.io.File
 import java.net.URL
@@ -63,6 +64,7 @@ class KiltLoader {
 
     fun scanMods() {
         Kilt.logger.info("Scanning the mods directory for Forge mods...")
+        DeltaTimeProfiler.push("scanMods")
 
         val modsDir = File(FabricLoader.getInstance().gameDir.toFile(), "mods")
 
@@ -73,9 +75,11 @@ class KiltLoader {
 
         val thrownExceptions = mutableMapOf<String, Exception>()
 
+        DeltaTimeProfiler.push("preload")
         modFiles.forEach { modFile ->
             thrownExceptions.putAll(preloadJarMod(modFile, ZipFile(modFile)))
         }
+        DeltaTimeProfiler.pop()
 
         // If exceptions had occurred during preloading, then create a window to show the exceptions.
         if (thrownExceptions.isNotEmpty()) {
@@ -249,9 +253,11 @@ class KiltLoader {
         }
 
         sortMods(modLoadingQueue)
+        DeltaTimeProfiler.pop()
     }
 
     private fun sortMods(queue: ConcurrentLinkedQueue<ForgeMod>) {
+        DeltaTimeProfiler.push("sortMods")
         val graph = GraphBuilder.directed().build<ForgeMod>()
 
         for (mod in queue) {
@@ -276,6 +282,7 @@ class KiltLoader {
         val sorted = TopologicalSort.topologicalSort(graph, null)
         queue.clear()
         queue.addAll(sorted)
+        DeltaTimeProfiler.pop()
     }
 
     fun preloadMods() {
@@ -345,6 +352,7 @@ class KiltLoader {
             return mapOf()
 
         val thrownExceptions = mutableMapOf<String, Exception>()
+        DeltaTimeProfiler.push(modFile.nameWithoutExtension)
 
         Kilt.logger.debug("Scanning jar file ${modFile.name} for Forge mod metadata.")
 
@@ -357,6 +365,8 @@ class KiltLoader {
 
                 Kilt.logger.info("Loaded JiJ'd mod ${modFile.nameWithoutExtension}.")
                 nestedModUpdater.accept(mod)
+
+                DeltaTimeProfiler.pop()
                 return mapOf()
             }
 
@@ -412,6 +422,7 @@ class KiltLoader {
             e.printStackTrace()
         }
 
+        DeltaTimeProfiler.pop()
         return thrownExceptions
     }
 
@@ -525,6 +536,8 @@ class KiltLoader {
 
     // Remaps all Forge mods from SRG to Intermediary/Yarn/MojMap
     private fun remapMods() {
+        DeltaTimeProfiler.push("remapMods")
+
         val remappedModsDir = File(kiltCacheDir, "remappedMods").apply {
             if (!this.exists())
                 this.mkdirs()
@@ -543,10 +556,13 @@ class KiltLoader {
                 it.tabs.removeIf { t -> t != tab }
             }, true)
         }
+
+        DeltaTimeProfiler.pop()
     }
 
     fun loadMods() {
         Kilt.logger.info("Starting initialization of Forge mods...")
+        DeltaTimeProfiler.push("loadMods")
 
         val exceptions = mutableListOf<Exception>()
 
@@ -555,6 +571,7 @@ class KiltLoader {
         while (modLoadingQueue.isNotEmpty()) {
             try {
                 val mod = modLoadingQueue.remove()
+                DeltaTimeProfiler.push(mod.modId)
 
                 if (!mod.shouldScan) {
                     mod.scanData = ModFileScanData()
@@ -591,6 +608,8 @@ class KiltLoader {
             } catch (e: Exception) {
                 e.printStackTrace()
                 exceptions.add(e)
+            } finally {
+                DeltaTimeProfiler.pop()
             }
         }
 
@@ -605,6 +624,7 @@ class KiltLoader {
                 it.tabs.removeIf { t -> t != tab }
             }, true)
         }
+        DeltaTimeProfiler.pop()
     }
 
     private val launcher = FabricLauncherBase.getLauncher()
@@ -647,6 +667,7 @@ class KiltLoader {
     }
 
     fun initMods() {
+        DeltaTimeProfiler.push("initMods")
         val exceptions = mutableListOf<Exception>()
 
         for (mod in mods) {
@@ -670,9 +691,11 @@ class KiltLoader {
                 it.tabs.removeIf { t -> t != tab }
             }, true)
         }
+        DeltaTimeProfiler.pop()
     }
 
     fun initMod(mod: ForgeMod, scanData: ModFileScanData): List<Exception> {
+        DeltaTimeProfiler.push(mod.modId)
         val exceptions = mutableListOf<Exception>()
 
         // this should probably belong to FMLJavaModLanguageProvider, but I doubt there's any mods that use it.
@@ -705,6 +728,7 @@ class KiltLoader {
 
         mod.eventBus.post(FMLConstructModEvent(mod, ModLoadingStage.CONSTRUCT))
 
+        DeltaTimeProfiler.pop()
         return exceptions
     }
 
@@ -755,36 +779,59 @@ class KiltLoader {
 
     private val fmlPhases = mutableMapOf(
         ModLoadingPhase.LOAD to {
+            DeltaTimeProfiler.push("config_load")
             // CONFIG_LOAD
             if (FabricLoader.getInstance().environmentType == EnvType.CLIENT) {
                 ConfigTracker.INSTANCE.loadConfigs(ModConfig.Type.CLIENT, FMLPaths.CONFIGDIR.get());
+            } else {
+                ConfigTracker.INSTANCE.loadConfigs(ModConfig.Type.SERVER, FMLPaths.CONFIGDIR.get());
             }
             ConfigTracker.INSTANCE.loadConfigs(ModConfig.Type.COMMON, FMLPaths.CONFIGDIR.get());
 
             // COMMON_SETUP
+            DeltaTimeProfiler.popPush("common_setup")
             ModLoader.get().kiltPostEventWrappingModsBuildEvent { FMLCommonSetupEvent(it, ModLoadingStage.COMMON_SETUP) }
+
+            DeltaTimeProfiler.push("runTasks")
             ModLoadingStage.COMMON_SETUP.deferredWorkQueue.runTasks()
+            DeltaTimeProfiler.pop()
 
             // SIDED_SETUP
+            DeltaTimeProfiler.popPush("sided_setup")
             ModLoader.get().kiltPostEventWrappingModsBuildEvent {
                 if (FabricLoader.getInstance().environmentType == EnvType.CLIENT)
                     FMLClientSetupEvent(it, ModLoadingStage.SIDED_SETUP)
                 else
                     FMLDedicatedServerSetupEvent(it, ModLoadingStage.SIDED_SETUP)
             }
+
+            DeltaTimeProfiler.push("runTasks")
             ModLoadingStage.SIDED_SETUP.deferredWorkQueue.runTasks()
+            DeltaTimeProfiler.pop()
 
             // ENQUEUE_IMC
+            DeltaTimeProfiler.popPush("enqueue_imc")
             ModLoader.get().kiltPostEventWrappingModsBuildEvent { InterModEnqueueEvent(it, ModLoadingStage.ENQUEUE_IMC) }
+
+            DeltaTimeProfiler.push("runTasks")
             ModLoadingStage.ENQUEUE_IMC.deferredWorkQueue.runTasks()
+            DeltaTimeProfiler.pop()
 
             // PROCESS_IMC
+            DeltaTimeProfiler.popPush("process_imc")
             ModLoader.get().kiltPostEventWrappingModsBuildEvent { InterModProcessEvent(it, ModLoadingStage.PROCESS_IMC) }
+
+            DeltaTimeProfiler.push("runTasks")
             ModLoadingStage.PROCESS_IMC.deferredWorkQueue.runTasks()
+            DeltaTimeProfiler.pop()
 
             // COMPLETE
+            DeltaTimeProfiler.popPush("complete")
             ModLoader.get().kiltPostEventWrappingModsBuildEvent { FMLLoadCompleteEvent(it, ModLoadingStage.COMPLETE) }
+
+            DeltaTimeProfiler.push("runTasks")
             ModLoadingStage.COMPLETE.deferredWorkQueue.runTasks()
+            DeltaTimeProfiler.pop()
         }
     )
 
@@ -801,13 +848,24 @@ class KiltLoader {
                 -1
         }
 
-        fmlPhases[phase]?.invoke()
+        DeltaTimeProfiler.push(phase.name.lowercase())
+        try {
+            fmlPhases[phase]?.invoke()
 
-        for (state in sortedStates) {
-            println("running ${state.name()} in ${state.phase()}")
-            state.inlineRunnable().ifPresent { consumer ->
-                consumer.accept(ModList.get())
+            for (state in sortedStates) {
+                println("running ${state.name()} in ${state.phase()}")
+
+                DeltaTimeProfiler.push(state.name())
+                try {
+                    state.inlineRunnable().ifPresent { consumer ->
+                        consumer.accept(ModList.get())
+                    }
+                } finally {
+                    DeltaTimeProfiler.pop()
+                }
             }
+        } finally {
+            DeltaTimeProfiler.pop()
         }
     }
 
