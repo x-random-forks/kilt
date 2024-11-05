@@ -18,7 +18,7 @@ public class MappedRegistryMixin<T> {
 
     @Inject(method = "freeze", at = @At("HEAD"))
     private void kilt$checkFreezers(CallbackInfoReturnable<Registry<T>> cir) {
-        System.out.println("Registry " + this.key + " was frozen");
-        (new Exception("frozen")).printStackTrace();
+        //System.out.println("Registry " + this.key + " was frozen");
+        //(new Exception("frozen")).printStackTrace();
     }
 }

@@ -49,8 +49,8 @@ public abstract class MappedRegistryInject<T> implements MappedRegistryInjection
     @Override
     public void unfreeze() {
         this.frozen = false;
-        System.out.println("Registry " + this.key + " was unfrozen");
-        (new Exception("frozen")).printStackTrace();
+        //System.out.println("Registry " + this.key + " was unfrozen");
+        //(new Exception("frozen")).printStackTrace();
     }
 
     // Kilt: force store unregisteredIntrusiveHolders
