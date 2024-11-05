@@ -370,6 +370,16 @@ class KiltLoader {
 
             if (nestedModUpdater != null && modsToml == null) {
                 val mod = createCustomMod(modFile)
+
+                if (FabricLoader.getInstance().isModLoaded(mod.modId) || FabricLoaderImpl.INSTANCE.getModCandidate(mod.modId) != null) {
+                    Kilt.logger.warn("Duplicate Forge and Fabric mod IDs detected: ${mod.modId}")
+                    return mapOf()
+                }
+
+                // Avoid loading mods twice
+                if (modLoadingQueue.any { it.modId == mod.modId })
+                    return mapOf()
+
                 modLoadingQueue.add(mod)
 
                 Kilt.logger.info("Loaded JiJ'd mod ${modFile.nameWithoutExtension}.")
@@ -476,8 +486,10 @@ class KiltLoader {
 
             // In most cases, Fabric versions of mods share the same mod ID as the Forge variant.
             // We don't want two of the same things, so we shouldn't allow this to occur.
-            if (FabricLoaderImpl.INSTANCE.getModCandidate(modId) != null)
-                throw IllegalStateException("Duplicate Forge and Fabric mod IDs detected: $modId")
+            if (FabricLoaderImpl.INSTANCE.getModCandidate(modId) != null || FabricLoader.getInstance().isModLoaded(modId)) {
+                Kilt.logger.warn("Duplicate Forge and Fabric mod IDs detected: $modId")
+                return@forEach
+            }
 
             // Forge and Fabric handle duplicate mods by taking the latest version
             // of the mod, I believe. We should share this behaviour, as some mods may
