@@ -1,3 +1,4 @@
+// TRACKED HASH: 5e7b81ffda346de6ce0bba263ac722b16acb197b
 package xyz.bluspring.kilt.forgeinjects.client.renderer.entity.layers;
 
 import net.minecraft.client.renderer.entity.layers.ElytraLayer;

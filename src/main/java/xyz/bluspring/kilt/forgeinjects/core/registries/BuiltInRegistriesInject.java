@@ -1,6 +1,7 @@
 // TRACKED HASH: 33c37e1450e21ad82101b30b9cc1bf7f4cb0c12d
 package xyz.bluspring.kilt.forgeinjects.core.registries;
 
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.serialization.Lifecycle;
 import net.minecraft.core.DefaultedRegistry;
@@ -27,5 +28,10 @@ public class BuiltInRegistriesInject {
             return registry;
         else
             return wrapper;
+    }
+
+    @WrapWithCondition(method = "bootStrap", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/registries/BuiltInRegistries;freeze()V"))
+    private static boolean kilt$avoidEarlyFreezingRegistry() {
+        return false;
     }
 }

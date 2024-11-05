@@ -1,3 +1,4 @@
+// TRACKED HASH: ca60bbd06c7c885c4461c9ed6a53102032e79acf
 package xyz.bluspring.kilt.forgeinjects.client.renderer.texture;
 
 import com.mojang.blaze3d.platform.NativeImage;

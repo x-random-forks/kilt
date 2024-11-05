@@ -1,3 +1,4 @@
+// TRACKED HASH: 3e4618eedaf96d01e4102a4396d98f0626daefc7
 package xyz.bluspring.kilt.forgeinjects.client.player;
 
 import net.minecraft.client.player.RemotePlayer;

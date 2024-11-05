@@ -22,6 +22,7 @@ import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.components.Renderable
 import net.minecraft.client.gui.components.events.GuiEventListener
 import net.minecraft.client.gui.narration.NarratableEntry
+import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.renderer.ShaderInstance
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.phys.BlockHitResult
@@ -42,7 +43,6 @@ import xyz.bluspring.kilt.Kilt
 import xyz.bluspring.kilt.mixin.GeometryLoaderManagerAccessor
 import xyz.bluspring.kilt.mixin.LevelRendererAccessor
 import xyz.bluspring.kilt.mixin.ScreenAccessor
-import java.util.concurrent.atomic.AtomicReference
 import java.util.function.Consumer
 
 @Suppress("removal")
@@ -66,10 +66,10 @@ class KiltClient : ClientModInitializer {
             ForgeEventFactory.onItemTooltip(stack, null, components, flag)
         }
 
-        val add = AtomicReference<Consumer<GuiEventListener>>()
+        val add = mutableMapOf<Screen, Consumer<GuiEventListener>>()
 
         ClientGuiEvent.INIT_PRE.register { screen, access ->
-            add.set(Consumer<GuiEventListener> {
+            add[screen] = Consumer<GuiEventListener> {
                 if (it is Renderable)
                     access.renderables.add(it)
 
@@ -77,16 +77,17 @@ class KiltClient : ClientModInitializer {
                     access.narratables.add(it)
 
                 (screen as ScreenAccessor).children.add(it)
-            })
+            }
 
-            if (MinecraftForge.EVENT_BUS.post(ScreenEvent.Init.Pre(screen, (screen as ScreenAccessor).children, add.get(), screen::callRemoveWidget)))
+            if (MinecraftForge.EVENT_BUS.post(ScreenEvent.Init.Pre(screen, (screen as ScreenAccessor).children, add[screen]!!, screen::callRemoveWidget))) {
+                add.remove(screen)
                 EventResult.interruptFalse()
-            else EventResult.pass()
+            } else EventResult.pass()
         }
 
         ClientGuiEvent.INIT_POST.register { screen, _ ->
-            MinecraftForge.EVENT_BUS.post(ScreenEvent.Init.Post(screen, (screen as ScreenAccessor).children, add.get(), screen::callRemoveWidget))
-            add.set(null)
+            MinecraftForge.EVENT_BUS.post(ScreenEvent.Init.Post(screen, (screen as ScreenAccessor).children, add[screen]!!, screen::callRemoveWidget))
+            add.remove(screen)
         }
 
         ClientGuiEvent.RENDER_CONTAINER_BACKGROUND.register { screen, poseStack, x, y, _ ->

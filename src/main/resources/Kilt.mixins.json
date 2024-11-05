@@ -5,6 +5,7 @@
     "plugin": "xyz.bluspring.kilt.KiltMixinPlugin",
     "compatibilityLevel": "JAVA_17",
     "mixins": [
+        "AbstractSelectionListAccessor",
         "ArgumentTypeInfosAccessor",
         "ArmPoseAccessor",
         "AttributeSupplierAccessor",
@@ -33,6 +34,7 @@
         "KeyMappingAccessor",
         "LazyRegistrarAccessor",
         "LevelRendererAccessor",
+        "LevelStorageSourceAccessor",
         "LocalPlayerAccessor",
         "LootPoolEntryContainerAccessor",
         "MappedRegistryAccessor",
@@ -81,6 +83,7 @@
         "compat.sodium.WorldSliceMixin",
         "data.registries.VanillaRegistriesAccessor",
         "debug.ChunkSkyLightSourcesMixin",
+        "dev.MappedRegistryMixin",
         "world.item.CreativeModeTabBuilderAccessor",
         "world.level.biome.BiomeClimateSettingsAccessor",
         "world.level.block.entity.RandomizableContainerBlockEntityMixin"

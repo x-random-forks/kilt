@@ -11,6 +11,7 @@ import net.minecraft.core.WritableRegistry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -27,6 +28,8 @@ public abstract class MappedRegistryInject<T> implements MappedRegistryInjection
     @Shadow public boolean frozen;
 
     @Shadow @Nullable public Map<T, Holder.Reference<T>> unregisteredIntrusiveHolders;
+
+    @Shadow @Final private ResourceKey<? extends Registry<T>> key;
 
     @CreateStatic
     private static Set<ResourceLocation> getKnownRegistries() {
@@ -46,6 +49,8 @@ public abstract class MappedRegistryInject<T> implements MappedRegistryInjection
     @Override
     public void unfreeze() {
         this.frozen = false;
+        System.out.println("Registry " + this.key + " was unfrozen");
+        (new Exception("frozen")).printStackTrace();
     }
 
     // Kilt: force store unregisteredIntrusiveHolders

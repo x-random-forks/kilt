@@ -1,3 +1,4 @@
+// TRACKED HASH: 0b3087cc25c2d2fd27ea17dbdbb73d5d1d3d7c79
 package xyz.bluspring.kilt.forgeinjects.client.renderer.texture;
 
 import net.minecraft.client.renderer.texture.Stitcher;

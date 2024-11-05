@@ -30,7 +30,6 @@ import net.minecraftforge.forgespi.language.IModInfo.DependencySide
 import net.minecraftforge.forgespi.language.MavenVersionAdapter
 import net.minecraftforge.forgespi.language.ModFileScanData
 import net.minecraftforge.registries.ForgeRegistries
-import net.minecraftforge.registries.GameData
 import org.apache.maven.artifact.versioning.ArtifactVersion
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion
 import org.objectweb.asm.ClassReader
@@ -804,11 +803,7 @@ class KiltLoader {
 
             DeltaTimeProfiler.push("runTasks")
 
-            // Kilt: this doesn't match Forge, but if we don't do this, some mods are unable to register
-            //       in the loot function types.
-            GameData.unfreezeData()
             ModLoadingStage.COMMON_SETUP.deferredWorkQueue.runTasks()
-            GameData.freezeData()
 
             DeltaTimeProfiler.pop()
 
