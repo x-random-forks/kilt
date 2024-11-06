@@ -1,6 +1,8 @@
 // TRACKED HASH: 870418c225798f0447483d4ac354f518addc694d
 package xyz.bluspring.kilt.forgeinjects.client.renderer;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
 import io.github.fabricators_of_create.porting_lib.extensions.extensions.DimensionSpecialEffectsExtensions;
 import net.minecraft.client.Camera;
@@ -13,17 +15,20 @@ import net.minecraftforge.client.extensions.IForgeDimensionSpecialEffects;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(value = DimensionSpecialEffects.class, priority = 900)
 public class DimensionSpecialEffectsInject implements IForgeDimensionSpecialEffects, DimensionSpecialEffectsExtensions {
-    /**
-     * @author BluSpring
-     * @reason Provide Forge dimension types while also allowing other mods to mixin
-     */
-    @Overwrite
-    public static DimensionSpecialEffects forType(DimensionType type) {
-        return DimensionSpecialEffectsManager.getForType(type.effectsLocation());
+    @ModifyReturnValue(method = "forType", at = @At("RETURN"))
+    private static DimensionSpecialEffects kilt$tryUseForgeSpecialEffects(DimensionSpecialEffects original, @Local(argsOnly = true) DimensionType type) {
+        var effects = DimensionSpecialEffectsManager.getForType(type.effectsLocation());
+
+        // If dimension special effects are the default in Forge, use the Vanilla one.
+        if (effects.equals(DimensionSpecialEffectsManager.kilt$getDefaultEffects())) {
+            return original;
+        }
+
+        return effects;
     }
 
     @Override
