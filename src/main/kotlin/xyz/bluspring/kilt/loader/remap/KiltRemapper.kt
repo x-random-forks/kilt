@@ -64,7 +64,7 @@ object KiltRemapper {
 
     // Mainly for debugging, to make sure all Forge mods remap correctly in production environments
     // without needing to actually launch a production environment.
-    private val forceProductionRemap = System.getProperty("kilt.forceProductionRemap")?.lowercase() == "true"
+    internal val forceProductionRemap = System.getProperty("kilt.forceProductionRemap")?.lowercase() == "true"
 
     // This is created automatically using https://github.com/BluSpring/srg2intermediary
     // srg -> intermediary
@@ -564,6 +564,7 @@ object KiltRemapper {
                 ObjectHolderDefinalizer.processClass(classNode2)
                 WorkaroundFixer.fixClass(classNode2)
                 ConflictingStaticMethodFixer.fixClass(classNode2)
+                MixinSpecialAnnotationRemapper.remapClass(classNode2)
 
                 val classWriter2 = ClassWriter(0)
                 classNode2.accept(classWriter2)

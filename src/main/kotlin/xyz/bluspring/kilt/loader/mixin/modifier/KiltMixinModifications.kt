@@ -168,7 +168,7 @@ object KiltMixinModifications {
         }
     }
 
-    private fun annotationValuesToMap(values: List<Any>): Map<String, Any> {
+    fun annotationValuesToMap(values: List<Any>): Map<String, Any> {
         val map = mutableMapOf<String, Any>()
 
         var currentKey = ""
