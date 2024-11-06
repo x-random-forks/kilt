@@ -87,7 +87,7 @@ object KiltRemapper {
     // Mainly for debugging, used to test unobfuscated mods and ensure that Kilt is running as intended.
     private val disableRemaps = System.getProperty("kilt.noRemap")?.lowercase() == "true"
 
-    private val mappingResolver = FabricLoader.getInstance().mappingResolver
+    private val mappingResolver = if (forceProductionRemap) NoopMappingResolver() else FabricLoader.getInstance().mappingResolver
     private val namespace: String = if (useNamed) launcher.targetNamespace else "intermediary"
 
     private lateinit var remappedModsDir: File
@@ -373,7 +373,7 @@ object KiltRemapper {
                                 srgMappedString.replaceAfter(";", "")
                             else
                                 ""
-                            val intermediaryClass = if (srgClass.isNotBlank()) remapDescriptor(srgClass) else ""
+                            val intermediaryClass = if (srgClass.isNotBlank()) remapDescriptor(srgClass, toIntermediary = forceProductionRemap) else ""
 
                             if (srgMappedString.contains(":")) {
                                 // field
@@ -382,7 +382,7 @@ object KiltRemapper {
                                 val srgField = split[0].removePrefix(srgClass)
                                 val srgDesc = split[1]
 
-                                val intermediaryDesc = remapDescriptor(srgDesc)
+                                val intermediaryDesc = remapDescriptor(srgDesc, toIntermediary = forceProductionRemap)
 
                                 val intermediaryField = "".run {
                                     if (srgClass.isNotBlank()) {
@@ -449,7 +449,7 @@ object KiltRemapper {
                                 val srgMethod = srgMappedString.replaceAfter("(", "").removeSuffix("(").removePrefix(srgClass)
                                 val srgDesc = srgMappedString.replaceBefore("(", "")
 
-                                val intermediaryDesc = remapDescriptor(srgDesc)
+                                val intermediaryDesc = remapDescriptor(srgDesc, toIntermediary = forceProductionRemap)
                                 val intermediaryMethod = "".run {
                                     if (srgClass.isNotBlank()) {
                                         if (nameMappingCache.contains(srgMethod)) {
