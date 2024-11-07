@@ -10,6 +10,7 @@ import java.util.*
 object DeltaTimeProfiler {
     private val taskTree = mutableMapOf<String, Long>()
     private val timeStack = Stack<Pair<String, Long>>()
+    private val averageStore = mutableMapOf<String, MutableList<Long>>()
 
     fun push(name: String) {
         if (name.contains("/"))
@@ -24,6 +25,7 @@ object DeltaTimeProfiler {
 
         val name = timeStack.joinToString("/") { it.first }
         taskTree[name] = System.currentTimeMillis() - timeStack.peek().second
+        averageStore.computeIfAbsent(name) { mutableListOf() }.add(System.currentTimeMillis() - timeStack.peek().second)
 
         timeStack.pop()
     }
@@ -42,8 +44,8 @@ object DeltaTimeProfiler {
     }
 
     fun dumpTree() {
-        if (timeStack.isNotEmpty())
-            throw IllegalStateException("Time stack is not empty!")
+        if (!timeStack.isEmpty())
+            Kilt.logger.warn("Time stack is not empty! Will only print currently available stacks.")
 
         if (!FabricLoader.getInstance().isDevelopmentEnvironment && System.getProperty("kilt.enableProfiling") != "true")
             return
@@ -59,7 +61,16 @@ object DeltaTimeProfiler {
         val name = names.last()
         val dashes = names.size * 3
 
-        Kilt.logger.info("${"-".repeat(dashes)} $name ($deltaTime ms)")
+        if (averageStore.containsKey(taskName) && averageStore[taskName]!!.size > 1) {
+            val list = averageStore[taskName]!!
+            val avg = list.average()
+            val total = list.sum()
+            Kilt.logger.info("${"-".repeat(dashes)} $name (last: $deltaTime ms, avg: $avg ms, total: $total)")
+
+            Kilt.logger.info("${"=".repeat(dashes + 2)} Top 20: ${list.sortedByDescending { it }.take(20).joinToString(", ") { "$it ms" }}")
+        } else {
+            Kilt.logger.info("${"-".repeat(dashes)} $name ($deltaTime ms)")
+        }
 
         for ((childName, childTime) in taskTree.filter { it.key.startsWith(taskName) && it.key.removePrefix(taskName).startsWith("/") && it.key.count { c -> c == '/' } == names.size }) {
             printTreeLine(childName, childTime)
