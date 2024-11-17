@@ -12,7 +12,7 @@ import java.util.Locale;
 
 @Pseudo
 @Mixin(targets = "com.github.alexthe666.iceandfire.client.model.util.TabulaModelHandlerHelper")
-public class TabulaModelHandlerHelper {
+public class TabulaModelHandlerHelperMixin {
     @WrapOperation(method = "loadTabulaModel", at = @At(value = "INVOKE", target = "Ljava/lang/ClassLoader;getResourceAsStream(Ljava/lang/String;)Ljava/io/InputStream;"))
     private static InputStream kilt$tryGetResourceFromKnot(ClassLoader instance, String string, Operation<InputStream> original) {
         var value = original.call(instance, string);

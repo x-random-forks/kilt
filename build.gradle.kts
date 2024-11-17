@@ -36,6 +36,9 @@ loom {
 }
 
 repositories {
+    mavenCentral()
+    mavenLocal()
+
     maven("https://mvn.devos.one/releases/") {
         name = "devOS Maven"
     }
@@ -74,8 +77,6 @@ repositories {
     maven("https://maven.parchmentmc.org") {
         name = "ParchmentMC"
     }
-
-    mavenCentral()
 
     flatDir {
         dir("libs")
@@ -132,9 +133,12 @@ dependencies {
         modImplementation(include("io.github.fabricators_of_create.Porting-Lib:$lib:${property("porting_lib_version")}")!!)
     }
     modImplementation ("dev.architectury:architectury-fabric:${property("architectury_version")}")
+
+    // Cursed Fabric/Mixin stuff
     implementation(include("com.github.thecatcore:CursedMixinExtensions:${property("cursedmixinextensions_version")}")!!)
     modImplementation(include("com.github.Chocohead:Fabric-ASM:v${property("fabric_asm_version")}")!!)
     include(implementation(annotationProcessor("com.github.bawnorton.mixinsquared:mixinsquared-fabric:${property("mixin_squared_version")}")!!)!!)
+    include(modImplementation("de.florianmichael:AsmFabricLoader:${property("asmfabricloader_version")}")!!)
 
     // TODO: remove this when 0.5 is mainlined into Fabric
     include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:${property("mixinextras_version")}")!!)!!)

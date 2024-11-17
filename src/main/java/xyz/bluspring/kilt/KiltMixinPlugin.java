@@ -11,6 +11,7 @@ import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 import xyz.bluspring.kilt.helpers.mixin.MixinExtensionHelper;
+import xyz.bluspring.kilt.loader.KiltLoader;
 import xyz.bluspring.kilt.loader.mixin.modifier.KiltMixinModifier;
 
 import java.util.List;
@@ -33,8 +34,7 @@ public class KiltMixinPlugin implements IMixinConfigPlugin {
         MixinConstraintsBootstrap.init(mixinPackage);
 
         ExtensionRegistrar.register(new KiltMixinModifier());
-
-        Kilt.Companion.getLoader().getScanModJob();
+        KiltLoader.INSTANCE.injectMods();
     }
 
     @Override

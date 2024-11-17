@@ -65,7 +65,7 @@
         "WorldSliceAccessor",
         "client.gui.components.ButtonBuilderAccessor",
         "client.renderer.item.ItemPropertiesAccessor",
-        "compat.forge.iceandfire.TabulaModelHandlerHelper",
+        "compat.forge.iceandfire.TabulaModelHandlerHelperMixin",
         "compat.forge.immersiveengineering.ChunkBuilderMeshingTaskMixin",
         "compat.forge.immersiveengineering.SodiumWorldRendererAccessor",
         "compat.forge.immersiveengineering.TerrainRenderPassAccessor",

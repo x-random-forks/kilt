@@ -201,7 +201,7 @@ class Kilt : ModInitializer {
 
         lateinit var instance: Kilt
         val logger: Logger = LoggerFactory.getLogger(Kilt::class.java)
-        val loader: KiltLoader = KiltLoader()
+        val loader: KiltLoader = KiltLoader.INSTANCE
         val gson = GsonBuilder().setPrettyPrinting().create()
 
         fun load(onServer: Boolean) {

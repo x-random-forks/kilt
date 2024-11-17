@@ -29,6 +29,9 @@
     ],
     "mm:early_risers": [
       "xyz.bluspring.kilt.loader.asm.KiltEarlyRiser"
+    ],
+    "afl:prePrePreLaunch": [
+      "xyz.bluspring.kilt.loader.KiltEarlierInitializer"
     ]
   },
   "mixins": [

@@ -3,10 +3,7 @@ package xyz.bluspring.kilt.loader
 import com.electronwill.nightconfig.core.CommentedConfig
 import com.electronwill.nightconfig.toml.TomlParser
 import com.google.gson.JsonParser
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import net.fabricmc.api.EnvType
 import net.fabricmc.loader.api.FabricLoader
 import net.fabricmc.loader.impl.FabricLoaderImpl
@@ -54,16 +51,7 @@ import java.util.function.Consumer
 import java.util.jar.JarFile
 import java.util.jar.Manifest
 import java.util.zip.ZipFile
-import kotlin.io.path.createDirectories
-import kotlin.io.path.createFile
-import kotlin.io.path.div
-import kotlin.io.path.exists
-import kotlin.io.path.forEachDirectoryEntry
-import kotlin.io.path.isDirectory
-import kotlin.io.path.name
-import kotlin.io.path.nameWithoutExtension
-import kotlin.io.path.toPath
-import kotlin.io.path.writeBytes
+import kotlin.io.path.*
 import kotlin.system.exitProcess
 
 class KiltLoader {
@@ -82,7 +70,11 @@ class KiltLoader {
         scope.launch(Dispatchers.IO) { scanMods() }
     }
 
-    suspend fun scanMods() {
+    fun runScanMods() {
+        runBlocking { scanModJob.join() }
+    }
+
+    private suspend fun scanMods() {
         Kilt.logger.info("Scanning the mods directory for Forge mods...")
         DeltaTimeProfiler.push("scanMods")
 
@@ -289,14 +281,6 @@ class KiltLoader {
         }
 
         sortMods(modLoadingQueue)
-
-        DeltaTimeProfiler.push("addToClassPath")
-        for (mod in modLoadingQueue) {
-            Kilt.loader.addModToFabric(mod)
-            FabricLauncherBase.getLauncher().addToClassPath(mod.remappedModFile.toURI().toPath())
-        }
-        DeltaTimeProfiler.pop()
-
         DeltaTimeProfiler.pop()
     }
 
@@ -306,6 +290,15 @@ class KiltLoader {
         val sorted = TopologicalSort.topologicalSort(graph, null)
         queue.clear()
         queue.addAll(sorted)
+        DeltaTimeProfiler.pop()
+    }
+
+    fun injectMods() {
+        DeltaTimeProfiler.push("addToClassPath")
+        for (mod in modLoadingQueue) {
+            Kilt.loader.addModToFabric(mod)
+            FabricLauncherBase.getLauncher().addToClassPath(mod.remappedModFile.toURI().toPath())
+        }
         DeltaTimeProfiler.pop()
     }
 
@@ -971,6 +964,9 @@ class KiltLoader {
     }
 
     companion object {
+        @JvmField
+        val INSTANCE = KiltLoader()
+
         // These constants are to be updated each time we change versions
         val SUPPORTED_FORGE_SPEC_VERSION = Constants.FORGE_LOADER_VERSION
         val SUPPORTED_FORGE_API_VERSION = Constants.FORGE_API_VERSION
