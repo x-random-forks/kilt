@@ -427,7 +427,7 @@ class KiltLoader {
                         file.createFile()
                         file.writeBytes(jarFile.getInputStream(entry).readAllBytes())
                     }.onFailure { throwable ->
-                        if (throwable !is FileAlreadyExistsException && throwable is Exception) {
+                        if (throwable !is FileAlreadyExistsException && throwable !is java.nio.file.FileAlreadyExistsException && throwable is Exception) {
                             Kilt.logger.error("Failed to load JiJ'd file: $fileName", throwable)
                             thrownExceptions[fileName] = throwable
                             return@forEach
