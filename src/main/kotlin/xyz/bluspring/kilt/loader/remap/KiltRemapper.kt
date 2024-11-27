@@ -7,19 +7,9 @@ import it.unimi.dsi.fastutil.objects.Object2ReferenceFunction
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMaps
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap
 import kotlinx.atomicfu.locks.synchronized
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.toSet
-import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.stream.consumeAsFlow
-import kotlinx.coroutines.withContext
 import net.fabricmc.loader.api.FabricLoader
 import net.fabricmc.loader.impl.game.GameProviderHelper
 import net.fabricmc.loader.impl.launch.FabricLauncherBase
@@ -39,19 +29,8 @@ import org.slf4j.LoggerFactory
 import xyz.bluspring.kilt.Kilt
 import xyz.bluspring.kilt.loader.KiltLoader
 import xyz.bluspring.kilt.loader.mod.ForgeMod
-import xyz.bluspring.kilt.loader.remap.fixers.ConflictingStaticMethodFixer
-import xyz.bluspring.kilt.loader.remap.fixers.EventClassVisibilityFixer
-import xyz.bluspring.kilt.loader.remap.fixers.EventEmptyInitializerFixer
-import xyz.bluspring.kilt.loader.remap.fixers.MixinShadowRemapper
-import xyz.bluspring.kilt.loader.remap.fixers.MixinSpecialAnnotationRemapper
-import xyz.bluspring.kilt.loader.remap.fixers.WorkaroundFixer
-import xyz.bluspring.kilt.util.CaseInsensitiveStringHashSet
-import xyz.bluspring.kilt.util.ClassNameHashSet
-import xyz.bluspring.kilt.util.KiltHelper
-import xyz.bluspring.kilt.util.filterAsync
-import xyz.bluspring.kilt.util.flatMapAsync
-import xyz.bluspring.kilt.util.mapAsync
-import xyz.bluspring.kilt.util.onEachAsync
+import xyz.bluspring.kilt.loader.remap.fixers.*
+import xyz.bluspring.kilt.util.*
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.nio.file.Path
@@ -61,15 +40,8 @@ import java.util.jar.JarEntry
 import java.util.jar.JarFile
 import java.util.jar.JarOutputStream
 import java.util.jar.Manifest
+import kotlin.io.path.*
 import kotlin.io.path.Path
-import kotlin.io.path.absolutePathString
-import kotlin.io.path.createFile
-import kotlin.io.path.div
-import kotlin.io.path.exists
-import kotlin.io.path.inputStream
-import kotlin.io.path.outputStream
-import kotlin.io.path.readText
-import kotlin.io.path.toPath
 import kotlin.time.measureTime
 
 
@@ -634,8 +606,8 @@ object KiltRemapper {
                 logger.info("Remapping ${mod.displayName} (${mod.modId})")
                 val ms = measureTime {
                     exceptions.addAll(remapMod(mod.modFile!!.toPath(), mod, mods))
-                }
-                logger.info("Remapped ${mod.displayName} (${mod.modId}) [took ${ms}]")
+                }.inWholeMilliseconds
+                logger.info("Remapped ${mod.displayName} (${mod.modId}) [took $ms ms]")
             }.onFailure {
                 logger.error("Failed to remap ${mod.displayName} (${mod.modId})", it)
                 if (it is Exception) {
