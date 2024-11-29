@@ -174,8 +174,8 @@ dependencies {
 
     modImplementation(include("teamreborn:energy:${property("teamreborn_energy_version")}")!!)
 
-    // Use Sinytra Connector's fork of ForgeAutoRenamingTool
-    implementation(include("dev.su5ed.sinytra:ForgeAutoRenamingTool:${property("forgerenamer_version")}")!!)
+    // Use Kilt's fork of Sinytra Connector's fork of ForgeAutoRenamingTool
+    implementation(include("xyz.bluspring:AutoRenamingTool:${property("forgerenamer_version")}")!!)
 
     fun modOptional(dependencyNotation: String, shouldRunInRuntime: Boolean, configuration: Action<ExternalModuleDependency>) {
         if (shouldRunInRuntime) {
