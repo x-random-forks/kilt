@@ -1,6 +1,9 @@
 name: Gradle CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - 'version/*'
 
 permissions:
   contents: read
