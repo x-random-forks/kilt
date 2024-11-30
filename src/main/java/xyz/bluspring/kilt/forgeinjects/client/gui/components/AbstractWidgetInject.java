@@ -2,23 +2,15 @@
 package xyz.bluspring.kilt.forgeinjects.client.gui.components;
 
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraftforge.client.extensions.IAbstractWidgetExtension;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import xyz.bluspring.kilt.helpers.mixin.CreateStatic;
 import xyz.bluspring.kilt.injections.client.gui.AbstractWidgetInjection;
 
 @Mixin(AbstractWidget.class)
-public class AbstractWidgetInject implements AbstractWidgetInjection, IAbstractWidgetExtension {
+public class AbstractWidgetInject implements AbstractWidgetInjection {
     @Shadow public boolean active;
     @Shadow protected int height;
-
-    @Redirect(method = "mouseClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractWidget;onClick(DD)V"))
-    private void kilt$useForgeClick(AbstractWidget instance, double mouseX, double mouseY, double mx, double my, int button) {
-        this.onClick(mouseX, mouseY, button);
-    }
 
     protected int packedFGColor = AbstractWidgetInjection.UNSET_FG_COLOR;
 

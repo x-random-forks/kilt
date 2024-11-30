@@ -98,6 +98,7 @@
         "world.entity.MobInject",
         "world.entity.SpawnPlacementsInject",
         "world.entity.SpawnPlacementsInject$TypeInject",
+        "world.entity.ai.BrainInject",
         "world.entity.ai.attributes.AttributeSupplierInject$BuilderInject",
         "world.entity.ai.attributes.DefaultAttributesInject",
         "world.entity.player.InventoryInject",

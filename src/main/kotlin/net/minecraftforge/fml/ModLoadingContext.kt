@@ -11,11 +11,12 @@ import xyz.bluspring.kilt.Kilt
 import xyz.bluspring.kilt.loader.KiltModContainer
 import xyz.bluspring.kilt.loader.mod.ForgeMod
 import java.util.concurrent.ConcurrentHashMap
+import java.util.function.BiPredicate
 import java.util.function.Supplier
 
-class ModLoadingContext(private val mod: ForgeMod) {
+open class ModLoadingContext(protected val mod: ForgeMod) {
     // this should be Any, but we're only handling Java mods here so
-    private var languageExtension: FMLJavaModLoadingContext = FMLJavaModLoadingContext(mod)
+    private var languageExtension: FMLJavaModLoadingContext = if (this is FMLJavaModLoadingContext) this else FMLJavaModLoadingContext(mod)
 
     val activeContainer: ModContainer = KiltModContainer(mod)
     val activeNamespace: String
@@ -41,6 +42,19 @@ class ModLoadingContext(private val mod: ForgeMod) {
     fun registerConfig(type: ModConfig.Type, spec: IConfigSpec<*>) {
         val modId = mod.modId
         ForgeConfigRegistry.INSTANCE.register(modId, type, spec)
+    }
+
+    // TODO: properly implement display tests?
+    fun registerDisplayTest(displayTest: IExtensionPoint.DisplayTest) {
+    }
+
+    fun registerDisplayTest(displayTest: Supplier<IExtensionPoint.DisplayTest>) {
+    }
+
+    fun registerDisplayTest(version: String, remoteVersion: BiPredicate<String, Boolean>) {
+    }
+
+    fun registerDisplayTest(suppliedVersion: Supplier<String>, remoteVersion: BiPredicate<String, Boolean>) {
     }
 
     companion object {

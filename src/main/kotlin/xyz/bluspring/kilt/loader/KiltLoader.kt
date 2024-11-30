@@ -21,21 +21,12 @@ import net.minecraft.SharedConstants
 import net.minecraft.server.Bootstrap
 import net.minecraftforge.common.ForgeStatesProvider
 import net.minecraftforge.eventbus.api.Event
-import net.minecraftforge.fml.ModList
-import net.minecraftforge.fml.ModLoader
-import net.minecraftforge.fml.ModLoadingContext
-import net.minecraftforge.fml.ModLoadingPhase
-import net.minecraftforge.fml.ModLoadingStage
+import net.minecraftforge.fml.*
 import net.minecraftforge.fml.common.Mod
 import net.minecraftforge.fml.config.ConfigTracker
 import net.minecraftforge.fml.config.ModConfig
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent
-import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent
-import net.minecraftforge.fml.event.lifecycle.FMLDedicatedServerSetupEvent
-import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent
-import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent
-import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent
+import net.minecraftforge.fml.event.lifecycle.*
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext
 import net.minecraftforge.fml.loading.FMLPaths
 import net.minecraftforge.fml.loading.moddiscovery.ModAnnotation
 import net.minecraftforge.fml.loading.moddiscovery.ModClassVisitor
@@ -58,15 +49,7 @@ import xyz.bluspring.kilt.loader.mod.ForgeMod
 import xyz.bluspring.kilt.loader.mod.LoaderModProvider
 import xyz.bluspring.kilt.loader.mod.fabric.FabricModProvider
 import xyz.bluspring.kilt.loader.remap.KiltRemapper
-import xyz.bluspring.kilt.util.DeltaTimeProfiler
-import xyz.bluspring.kilt.util.KiltHelper
-import xyz.bluspring.kilt.util.buildGraph
-import xyz.bluspring.kilt.util.collect
-import xyz.bluspring.kilt.util.concurrent
-import xyz.bluspring.kilt.util.filter
-import xyz.bluspring.kilt.util.launchIn
-import xyz.bluspring.kilt.util.map
-import xyz.bluspring.kilt.util.onEach
+import xyz.bluspring.kilt.util.*
 import java.net.URL
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -74,16 +57,7 @@ import java.util.function.Consumer
 import java.util.jar.JarFile
 import java.util.jar.Manifest
 import java.util.zip.ZipFile
-import kotlin.io.path.createDirectories
-import kotlin.io.path.createFile
-import kotlin.io.path.div
-import kotlin.io.path.exists
-import kotlin.io.path.forEachDirectoryEntry
-import kotlin.io.path.isDirectory
-import kotlin.io.path.name
-import kotlin.io.path.nameWithoutExtension
-import kotlin.io.path.toPath
-import kotlin.io.path.writeBytes
+import kotlin.io.path.*
 import kotlin.system.exitProcess
 
 class KiltLoader {
@@ -788,7 +762,16 @@ class KiltLoader {
 
                     val clazz = launcher.loadIntoTarget(it.clazz.className)
 
-                    mod.modObject = clazz.getDeclaredConstructor().newInstance()
+                    try {
+                        val constructor = clazz.getDeclaredConstructor(FMLJavaModLoadingContext::class.java)
+                        val ctx = FMLJavaModLoadingContext(mod)
+
+                        ModLoadingContext.contexts[mod.modId] = ctx
+                        mod.modObject = constructor.newInstance(ctx)
+                    } catch (_: NoSuchMethodException) {
+                        mod.modObject = clazz.getDeclaredConstructor().newInstance()
+                    }
+
                     Kilt.logger.info("Initialized new instance of mod $modId.")
 
                     ModLoadingContext.kiltActiveModId = null

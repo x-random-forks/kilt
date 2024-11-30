@@ -15,6 +15,10 @@ class VersionChecker {
         fun isAnimated(): Boolean {
             return false
         }
+
+        fun isOutdated(): Boolean {
+            return this == OUTDATED || this == BETA_OUTDATED
+        }
     }
 
     @JvmRecord

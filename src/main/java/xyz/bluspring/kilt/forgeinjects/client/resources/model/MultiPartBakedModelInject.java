@@ -16,11 +16,9 @@ import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.MultiPartBakedModel;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemDisplayContext;
-import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.ChunkRenderTypeSet;
 import net.minecraftforge.client.model.IDynamicBakedModel;
@@ -190,11 +188,6 @@ public abstract class MultiPartBakedModelInject implements IDynamicBakedModel, M
     @Override
     public boolean useAmbientOcclusion(BlockState state, RenderType renderType) {
         return this.defaultModel.useAmbientOcclusion(state, renderType);
-    }
-
-    @Override
-    public @NotNull ModelData getModelData(@NotNull BlockAndTintGetter level, @NotNull BlockPos pos, @NotNull BlockState state, @NotNull ModelData modelData) {
-        return MultipartModelData.create(selectors, this.getSelectors(state), level, pos, state, modelData);
     }
 
     @Override
