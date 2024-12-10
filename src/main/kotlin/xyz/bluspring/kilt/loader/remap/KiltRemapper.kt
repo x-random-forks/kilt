@@ -6,21 +6,9 @@ import com.google.gson.JsonParser
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMaps
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap
 import kotlinx.atomicfu.locks.synchronized
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.flow.toSet
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.stream.consumeAsFlow
-import kotlinx.coroutines.withContext
 import net.fabricmc.loader.api.FabricLoader
 import net.fabricmc.loader.impl.game.GameProviderHelper
 import net.fabricmc.loader.impl.launch.FabricLauncherBase
@@ -40,23 +28,8 @@ import org.slf4j.LoggerFactory
 import xyz.bluspring.kilt.Kilt
 import xyz.bluspring.kilt.loader.KiltLoader
 import xyz.bluspring.kilt.loader.mod.ForgeMod
-import xyz.bluspring.kilt.loader.remap.fixers.ConflictingStaticMethodFixer
-import xyz.bluspring.kilt.loader.remap.fixers.EventClassVisibilityFixer
-import xyz.bluspring.kilt.loader.remap.fixers.EventEmptyInitializerFixer
-import xyz.bluspring.kilt.loader.remap.fixers.MixinShadowRemapper
-import xyz.bluspring.kilt.loader.remap.fixers.MixinSpecialAnnotationRemapper
-import xyz.bluspring.kilt.loader.remap.fixers.WorkaroundFixer
-import xyz.bluspring.kilt.util.CaseInsensitiveStringHashSet
-import xyz.bluspring.kilt.util.ClassNameHashSet
-import xyz.bluspring.kilt.util.KiltHelper
-import xyz.bluspring.kilt.util.collect
-import xyz.bluspring.kilt.util.concurrent
-import xyz.bluspring.kilt.util.filter
-import xyz.bluspring.kilt.util.flatMap
-import xyz.bluspring.kilt.util.launchIn
-import xyz.bluspring.kilt.util.map
-import xyz.bluspring.kilt.util.merge
-import xyz.bluspring.kilt.util.onEach
+import xyz.bluspring.kilt.loader.remap.fixers.*
+import xyz.bluspring.kilt.util.*
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.nio.file.Path
@@ -66,15 +39,8 @@ import java.util.jar.JarEntry
 import java.util.jar.JarFile
 import java.util.jar.JarOutputStream
 import java.util.jar.Manifest
+import kotlin.io.path.*
 import kotlin.io.path.Path
-import kotlin.io.path.absolutePathString
-import kotlin.io.path.createFile
-import kotlin.io.path.div
-import kotlin.io.path.exists
-import kotlin.io.path.inputStream
-import kotlin.io.path.outputStream
-import kotlin.io.path.readText
-import kotlin.io.path.toPath
 import kotlin.time.measureTime
 
 
@@ -188,6 +154,8 @@ object KiltRemapper {
             }.join()
         }
     }
+
+    fun init() {}
 
     suspend fun remapMods(modLoadingQueue: ConcurrentLinkedQueue<ForgeMod>, remappedModsDir: Path): List<Exception> {
         if (disableRemaps) {
