@@ -50,10 +50,10 @@ public class KiltMixinPlugin implements IMixinConfigPlugin {
 
         if (mixinClassName.contains("compat.forge.")) {
             var modId = StringsKt.removePrefix(mixinClassName, "xyz.bluspring.kilt.mixin.compat.forge.").split("\\.")[0];
-            return Kilt.Companion.getLoader().hasMod(modId) && MixinConstraints.shouldApplyMixin(targetClassName, mixinClassName);
+            return Kilt.Companion.getLoader().hasMod(modId) && MixinConstraints.shouldApplyMixin(mixinClassName);
         }
 
-        return MixinConstraints.shouldApplyMixin(targetClassName, mixinClassName);
+        return MixinConstraints.shouldApplyMixin(mixinClassName);
     }
 
     @Override
