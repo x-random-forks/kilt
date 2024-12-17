@@ -21,7 +21,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import xyz.bluspring.kilt.compat.immersive_engineering.SodiumIEVertexConsumer;
 
-@IfModLoaded(value = "immersiveengineering")
 @IfModLoaded(value = "sodium", maxVersion = "0.6.0")
 @Pseudo
 @Mixin(ChunkBuilderMeshingTask.class)

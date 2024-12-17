@@ -2,7 +2,6 @@ package xyz.bluspring.kilt.mixin.compat.forge.iceandfire;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.moulberry.mixinconstraints.annotations.IfModLoaded;
 import kotlin.text.StringsKt;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -11,7 +10,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import java.io.InputStream;
 import java.util.Locale;
 
-@IfModLoaded("iceandfire")
 @Pseudo
 @Mixin(targets = "com.github.alexthe666.iceandfire.client.model.util.TabulaModelHandlerHelper")
 public class TabulaModelHandlerHelperMixin {
