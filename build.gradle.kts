@@ -1,19 +1,21 @@
 import org.ajoberstar.grgit.Grgit
 import org.jetbrains.kotlin.daemon.common.toHexString
-import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
 import xyz.bluspring.kilt.gradle.AccessTransformerRemapper
 import java.security.MessageDigest
 
 plugins {
     kotlin("jvm")
-    id ("fabric-loom") version "1.7-SNAPSHOT"
+    id ("fabric-loom") version "1.9-SNAPSHOT"
     id ("maven-publish")
     id ("org.ajoberstar.grgit") version "5.0.0" apply false
 }
 
 version = "${property("mod_version")}+mc${property("minecraft_version")}${getVersionMetadata()}"
 group = property("maven_group")!!
-archivesName.set(property("archives_base_name")!! as String)
+
+base {
+    archivesName.set(property("archives_base_name")!! as String)
+}
 
 sourceSets {
     getByName("main") {
@@ -135,7 +137,7 @@ dependencies {
     modImplementation ("dev.architectury:architectury-fabric:${property("architectury_version")}")
 
     // Cursed Fabric/Mixin stuff
-    implementation(include("com.github.thecatcore:CursedMixinExtensions:${property("cursedmixinextensions_version")}")!!)
+    implementation(include("com.github.FabricCompatibilityLayers:CursedMixinExtensions:${property("cursedmixinextensions_version")}")!!)
     modImplementation(include("com.github.Chocohead:Fabric-ASM:v${property("fabric_asm_version")}")!!)
     include(implementation(annotationProcessor("com.github.bawnorton.mixinsquared:mixinsquared-fabric:${property("mixin_squared_version")}")!!)!!)
     include(modImplementation("de.florianmichael:AsmFabricLoader:${property("asmfabricloader_version")}")!!)
@@ -146,7 +148,7 @@ dependencies {
 //modImplementation(include("io.github.tropheusj:serialization-hooks:${property("serialization_hooks_version")}")!!)
     modImplementation(include("com.jamieswhiteshirt:reach-entity-attributes:${property("reach_entity_attributes_version")}")!!)
     modImplementation("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${property("forgeconfigapiport_version")}")
-    include(implementation("com.moulberry:mixinconstraints:${property("mixinconstraints_version")}")!!)
+    include(implementation("xyz.bluspring.kiltmc:MixinConstraints:${property("mixinconstraints_version")}")!!)
 
     // Forge stuff
     implementation(include("xyz.bluspring:eventbus:${property("eventbus_version")}") {
