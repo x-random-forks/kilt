@@ -1,11 +1,7 @@
 @file:Suppress("UnstableApiUsage")
 
-import org.gradle.kotlin.dsl.dir
-import org.gradle.kotlin.dsl.flatDir
-import org.gradle.kotlin.dsl.mavenCentral
-
-
 enableFeaturePreview("STABLE_CONFIGURATION_CACHE")
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
     repositories {
@@ -100,3 +96,7 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Kilt"
+
+rootDir.listFiles { f: File -> f.isDirectory && f.name.startsWith("kilt-") }?.forEach { dir ->
+    include(dir.name)
+}

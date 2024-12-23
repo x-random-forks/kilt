@@ -3,6 +3,7 @@ package xyz.bluspring.kilt.loader
 import com.electronwill.nightconfig.core.CommentedConfig
 import com.electronwill.nightconfig.toml.TomlParser
 import com.google.gson.JsonParser
+import cpw.mods.modlauncher.Launcher
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.asFlow
@@ -13,6 +14,7 @@ import kotlinx.coroutines.stream.consumeAsFlow
 import kotlinx.coroutines.withContext
 import net.fabricmc.api.EnvType
 import net.fabricmc.loader.api.FabricLoader
+import net.fabricmc.loader.api.Version
 import net.fabricmc.loader.impl.FabricLoaderImpl
 import net.fabricmc.loader.impl.gui.FabricGuiEntry
 import net.fabricmc.loader.impl.gui.FabricStatusTree
@@ -50,7 +52,7 @@ import xyz.bluspring.kilt.loader.mod.LoaderModProvider
 import xyz.bluspring.kilt.loader.mod.fabric.FabricModProvider
 import xyz.bluspring.kilt.loader.remap.KiltRemapper
 import xyz.bluspring.kilt.util.*
-import java.net.URL
+import java.net.URI
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.function.Consumer
@@ -381,7 +383,7 @@ class KiltLoader {
                 if (FabricLoader.getInstance()
                         .isModLoaded(mod.modId) || FabricLoaderImpl.INSTANCE.getModCandidate(mod.modId) != null
                 ) {
-                    Kilt.logger.warn("Duplicate Forge and Fabric mod IDs detected: ${mod.modId}")
+                    Kilt.logger.warn("Duplicate Fabric and Forge mod IDs detected: ${mod.modId}")
                     return mapOf()
                 }
 
@@ -458,7 +460,8 @@ class KiltLoader {
         jarFile: ZipFile?,
         nestedMods: List<ForgeMod> = listOf()
     ): List<ForgeMod> {
-        if (toml.get("modLoader") as String != "javafml" && toml.get("modLoader") as String != "lowcodefml")
+        if (toml.get("modLoader") as String != "javafml" && toml.get("modLoader") as String != "lowcodefml") {
+            //TODO: add support for IModLanguageProvider
             throw Exception(
                 "Forge mod file ${modFile?.name ?: "(unknown)"} is not a supported FML mod! (got ${
                     toml.get(
@@ -466,6 +469,7 @@ class KiltLoader {
                     ) as String
                 })"
             )
+        }
 
         // Load the JAR's manifest file, or at least try to.
         val manifest = if (jarFile != null) try {
@@ -533,7 +537,7 @@ class KiltLoader {
                 displayName = metadata.getConfigElement<String>("displayName").orElse(modId),
                 updateURL = metadata.getConfigElement<String>("updateJSONURL").run {
                     return@run if (this.isPresent)
-                        URL(this.get())
+                        URI(this.get()).toURL()
                     else
                         null
                 },
@@ -557,7 +561,7 @@ class KiltLoader {
                             ordering = IModInfo.Ordering.valueOf(
                                 it.getConfigElement<String>("ordering").orElse("NONE")
                             ),
-                            side = IModInfo.DependencySide.valueOf(it.getConfigElement<String>("side").orElse("BOTH"))
+                            side = DependencySide.valueOf(it.getConfigElement<String>("side").orElse("BOTH"))
                         )
                     },
                 modFile = modFile?.toFile(),
@@ -810,7 +814,7 @@ class KiltLoader {
             val accessTransformer = KiltLoader::class.java.getResource("META-INF/accesstransformer.cfg")
 
             if (accessTransformer != null) {
-                Kilt.logger.info("Found access transformer for ${mod.modId}")
+                Kilt.logger.info("Found Forge access transformer for ${mod.modId}")
                 AccessTransformerLoader.convertTransformers(accessTransformer.readBytes())
             }
         }
@@ -837,11 +841,11 @@ class KiltLoader {
             DeltaTimeProfiler.push("config_load")
             // CONFIG_LOAD
             if (FabricLoader.getInstance().environmentType == EnvType.CLIENT) {
-                ConfigTracker.INSTANCE.loadConfigs(ModConfig.Type.CLIENT, FMLPaths.CONFIGDIR.get());
+                ConfigTracker.INSTANCE.loadConfigs(ModConfig.Type.CLIENT, FMLPaths.CONFIGDIR.get())
             } else {
-                ConfigTracker.INSTANCE.loadConfigs(ModConfig.Type.SERVER, FMLPaths.CONFIGDIR.get());
+                ConfigTracker.INSTANCE.loadConfigs(ModConfig.Type.SERVER, FMLPaths.CONFIGDIR.get())
             }
-            ConfigTracker.INSTANCE.loadConfigs(ModConfig.Type.COMMON, FMLPaths.CONFIGDIR.get());
+            ConfigTracker.INSTANCE.loadConfigs(ModConfig.Type.COMMON, FMLPaths.CONFIGDIR.get())
 
             // COMMON_SETUP
             DeltaTimeProfiler.popPush("common_setup")
@@ -937,6 +941,7 @@ class KiltLoader {
     // We need to initialize all early Forge-related things immediately,
     // because otherwise things will break entirely.
     fun initForge() {
+        Launcher.INSTANCE.`kilt$populateEnvironment`()
         SharedConstants.tryDetectVersion()
         Bootstrap.bootStrap() // fuck you
         ForgeRegistries.init()
@@ -976,7 +981,7 @@ class KiltLoader {
         // These constants are to be updated each time we change versions
         val SUPPORTED_FORGE_SPEC_VERSION = Constants.FORGE_LOADER_VERSION
         val SUPPORTED_FORGE_API_VERSION = Constants.FORGE_API_VERSION
-        val MC_VERSION = FabricLoader.getInstance().getModContainer("minecraft").orElseThrow().metadata.version
+        val MC_VERSION: Version = FabricLoader.getInstance().getModContainer("minecraft").orElseThrow().metadata.version
 
         private val MOD_ANNOTATION = Type.getType(Mod::class.java)
         private val AUTO_SUBSCRIBE_ANNOTATION = Type.getType(Mod.EventBusSubscriber::class.java)
@@ -995,7 +1000,5 @@ class KiltLoader {
             return (FabricLoader.getInstance().environmentType == EnvType.CLIENT && side == DependencySide.CLIENT)
                     || (FabricLoader.getInstance().environmentType == EnvType.SERVER && side == DependencySide.SERVER)
         }
-
-
     }
 }

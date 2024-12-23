@@ -1,5 +1,6 @@
 package xyz.bluspring.kilt
 
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dev.architectury.event.CompoundEventResult
 import dev.architectury.event.EventResult
@@ -202,7 +203,7 @@ class Kilt : ModInitializer {
         lateinit var instance: Kilt
         val logger: Logger = LoggerFactory.getLogger(Kilt::class.java)
         val loader: KiltLoader = KiltLoader.INSTANCE
-        val gson = GsonBuilder().setPrettyPrinting().create()
+        val gson: Gson = GsonBuilder().setPrettyPrinting().create()
 
         fun load(onServer: Boolean) {
             loader.initMods()

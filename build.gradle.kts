@@ -13,8 +13,13 @@ plugins {
     id ("org.ajoberstar.grgit") version "5.0.0" apply false
 }
 
-version = "${property("mod_version")}+mc${property("minecraft_version")}${getVersionMetadata()}"
-group = property("maven_group")!!
+allprojects {
+    apply(plugin = "java-library")
+    apply(plugin = "org.jetbrains.kotlin.jvm")
+
+    group = property("maven_group")!!
+    version = "${property("mod_version")}+mc${property("minecraft_version")}${getVersionMetadata()}"
+}
 
 base {
     archivesName.set(property("archives_base_name")!! as String)
@@ -60,6 +65,9 @@ dependencies {
     modImplementation(include("me.luligabi:NoIndium:${property("no_indium_version")}") {
         exclude("net.fabricmc", "fabric-loader")
     })
+
+    // Kilt modules
+    include(implementation(projects.kiltModlauncher)!!)
 
     // Forge Reimplementations
     val portingLibs = listOf("accessors", "asm", "attributes", "base", "blocks", "brewing", "chunk_loading", "client_events", "common", "core", "data", "entity", "extensions", "fluids", "gametest", "gui_utils", "items", "lazy_registration", "level_events", "loot", "mixin_extensions", "model_builders", "model_generators", "model_loader", "model_materials", "models", "networking", "obj_loader", "recipe_book_categories", "registries", "tags", "tool_actions", "transfer", "utility")
@@ -152,16 +160,21 @@ configurations.all {
 
 val targetJavaVersion = "17"
 
-java {
-    val javaVersion = JavaVersion.toVersion(targetJavaVersion)
-    if (JavaVersion.current() < javaVersion) {
-        toolchain.languageVersion.set(JavaLanguageVersion.of(targetJavaVersion))
+allprojects {
+    configure<JavaPluginExtension> {
+        val javaVersion = JavaVersion.toVersion(targetJavaVersion)
+        if (JavaVersion.current() < javaVersion) {
+            toolchain.languageVersion.set(JavaLanguageVersion.of(targetJavaVersion))
+        }
+
+        sourceCompatibility = javaVersion
+        targetCompatibility = javaVersion
+
+        // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+        // if it is present.
+        // If you remove this line, sources will not be generated.
+        withSourcesJar()
     }
-
-    sourceCompatibility = javaVersion
-    targetCompatibility = javaVersion
-
-    withSourcesJar()
 }
 
 interface InjectedServices {
