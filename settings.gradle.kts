@@ -18,3 +18,9 @@ pluginManagement {
                     .split("+")[0] // Ensures sentences like `+build.1` are ignored
     }
 }
+
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
+}
+
+rootProject.name = "Kilt"
