@@ -174,7 +174,7 @@ tasks {
     register("countPatchProgress") {
         group = "kilt"
         description = "Counts the total of patches in Forge, and checks how many Kilt ForgeInjects there are, to check how much is remaining."
-        notCompatibleWithConfigurationCache("This isn't called every build; to be fixed later")
+        notCompatibleWithConfigurationCache("Must not be cached")
 
         doFirst {
             // Scan Forge patches dir
@@ -207,7 +207,7 @@ tasks {
     register("tagPatches") {
         group = "kilt"
         description = "Tags the Kilt ForgeInjects with their currently tracked patch hash to ensure they are all up to date."
-        notCompatibleWithConfigurationCache("This isn't called every build; to be fixed later")
+        notCompatibleWithConfigurationCache("Must not be cached")
 
         doFirst {
             fun readDir(file: File) {
@@ -332,7 +332,7 @@ tasks {
 
     register("transformerToWidener") {
         group = "kilt"
-        notCompatibleWithConfigurationCache("This isn't called every build; to be fixed later")
+        notCompatibleWithConfigurationCache("Must not be cached")
 
         val minecraft_version: String by project
         doLast {
