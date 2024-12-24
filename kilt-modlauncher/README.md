@@ -4,4 +4,4 @@ A reimplementation of the [modlauncher](https://github.com/McModLauncher/modlaun
 
 ## Licensing
 
-This module includes parts of [modlauncher](https://github.com/McModLauncher/modlauncher/), which is licensed under the [GPLv3](https://github.com/McModLauncher/modlauncher/blob/10.0/COPYING).
+This module includes parts of [modlauncher](https://github.com/McModLauncher/modlauncher/), which is licensed under the [LGPLv3](https://github.com/McModLauncher/modlauncher/blob/10.0/COPYING).

@@ -1,10 +1,9 @@
 package net.minecraftforge.fml.loading
 
 import org.apache.logging.log4j.core.lookup.StrSubstitutor
-import java.net.MalformedURLException
+import java.net.URI
 import java.net.URL
 import java.util.stream.Stream
-
 
 object StringUtils {
     @JvmStatic
@@ -32,11 +31,9 @@ object StringUtils {
         return if (string == null || string.trim { it <= ' ' }
                 .isEmpty() || string.contains("myurl.me") || string.contains("example.invalid"))
             null
-        else try {
-            URL(string)
-        } catch (e: MalformedURLException) {
-            throw RuntimeException(e)
-        }
+        else runCatching {
+            URI(string).toURL()
+        }.onFailure { e -> throw RuntimeException(e) }.getOrNull()
     }
 
     @JvmStatic

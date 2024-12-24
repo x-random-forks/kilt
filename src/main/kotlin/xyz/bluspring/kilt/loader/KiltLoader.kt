@@ -1,3 +1,5 @@
+@file:Suppress("LoggingSimilarMessage")
+
 package xyz.bluspring.kilt.loader
 
 import com.electronwill.nightconfig.core.CommentedConfig
@@ -383,7 +385,7 @@ class KiltLoader {
                 if (FabricLoader.getInstance()
                         .isModLoaded(mod.modId) || FabricLoaderImpl.INSTANCE.getModCandidate(mod.modId) != null
                 ) {
-                    Kilt.logger.warn("Duplicate Fabric and Forge mod IDs detected: ${mod.modId}")
+                    Kilt.logger.warn("Duplicate Forge and Fabric mod IDs detected: ${mod.modId}")
                     return mapOf()
                 }
 
@@ -512,6 +514,7 @@ class KiltLoader {
             if (FabricLoaderImpl.INSTANCE.getModCandidate(modId) != null || FabricLoader.getInstance()
                     .isModLoaded(modId)
             ) {
+                @Suppress("LoggingSimilarMessage")
                 Kilt.logger.warn("Duplicate Forge and Fabric mod IDs detected: $modId")
                 return@forEach
             }
@@ -810,7 +813,7 @@ class KiltLoader {
                 Kilt.logger.info("Found access transformer for ${mod.modId}")
                 AccessTransformerLoader.convertTransformers(mod.jar.getInputStream(accessTransformer).readAllBytes())
             }
-        } catch (e: UninitializedPropertyAccessException) { // Forge special case
+        } catch (_: UninitializedPropertyAccessException) { // Forge special case
             val accessTransformer = KiltLoader::class.java.getResource("META-INF/accesstransformer.cfg")
 
             if (accessTransformer != null) {

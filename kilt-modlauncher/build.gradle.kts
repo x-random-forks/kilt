@@ -1,10 +1,6 @@
-repositories {
-    mavenCentral()
-    maven("https://maven.neoforged.net/releases")
-    maven("https://maven.fabricmc.net/")
-}
+@Suppress("PropertyName")
+val loader_version: String by rootProject
 
 dependencies {
-    compileOnly("cpw.mods:securejarhandler:3.0.4")
-    compileOnly("net.fabricmc:fabric-loader:0.14.9")
+    compileOnly("net.fabricmc:fabric-loader:$loader_version")
 }

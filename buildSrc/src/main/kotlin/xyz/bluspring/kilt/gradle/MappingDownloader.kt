@@ -2,7 +2,7 @@ package xyz.bluspring.kilt.gradle
 
 import com.google.gson.JsonParser
 import java.io.File
-import java.net.URL
+import java.net.URI
 
 class MappingDownloader(private val version: String, private val tempDir: File) {
     val mojangMappingsFile = File(tempDir, "mojang_$version.txt")
@@ -25,18 +25,18 @@ class MappingDownloader(private val version: String, private val tempDir: File) 
         }
 
         println("Downloading Mojang mappings for $version...")
-        val manifestUrl = URL("https://launchermeta.mojang.com/mc/game/version_manifest_v2.json")
+        val manifestUrl = URI("https://launchermeta.mojang.com/mc/game/version_manifest_v2.json").toURL()
         val manifestJson = JsonParser.parseString(manifestUrl.readText()).asJsonObject
 
         val versionManifestJson = manifestJson.getAsJsonArray("versions").firstOrNull {
             it.asJsonObject.get("id").asString == version
         }?.asJsonObject ?: throw IllegalArgumentException("Invalid version!")
 
-        val versionUrl = URL(versionManifestJson.get("url").asString)
+        val versionUrl = URI(versionManifestJson.get("url").asString).toURL()
         val versionJson = JsonParser.parseString(versionUrl.readText()).asJsonObject
 
         val downloads = versionJson.getAsJsonObject("downloads")
-        val mappingsUrl = URL(downloads.getAsJsonObject("client_mappings").get("url").asString)
+        val mappingsUrl = URI(downloads.getAsJsonObject("client_mappings").get("url").asString).toURL()
 
         mojangMappingsFile.createNewFile()
         mojangMappingsFile.writeText(mappingsUrl.readText())
@@ -58,7 +58,7 @@ class MappingDownloader(private val version: String, private val tempDir: File) 
 
         // This is the most reliable spot where we can get updated stuff, since the Forge Maven is literally never updated for
         // patch version.
-        val url = URL("https://raw.githubusercontent.com/MinecraftForge/MCPConfig/master/versions/$versionType/$version/joined.tsrg")
+        val url = URI("https://raw.githubusercontent.com/MinecraftForge/MCPConfig/master/versions/$versionType/$version/joined.tsrg").toURL()
 
         srgMappingsFile.createNewFile()
         srgMappingsFile.writeText(url.readText())
