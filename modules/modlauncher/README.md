@@ -1,4 +1,4 @@
-# kilt-stub-modlauncher
+# kilt-modlauncher
 
 A reimplementation of the [modlauncher](https://github.com/McModLauncher/modlauncher) API, SPI, and common classes for Kilt.
 

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "kilt-modlauncher",
+  "version": "${version}",
+  "name": "Kilt: Modlauncher",
+  "description": "A reimplementation of the modlauncher API, SPI, and common classes for Kilt.",
+  "authors": [
+    "BluSpring"
+  ],
+  "contact": {
+    "repo": "https://github.com/KiltMC/Kilt",
+    "issues": "https://github.com/KiltMC/Kilt/issues"
+  },
+  "license": "LGPL-2.1-only",
+  "icon": "assets/kilt/icon.png",
+  "environment": "*",
+  "depends": {
+    "kilt": "*"
+  }
+}

@@ -1,10 +1,11 @@
-package xyz.bluspring.kilt.gradle
+package xyz.bluspring.kilt.gradle.util
 
 import net.fabricmc.mappingio.MappingReader
 import net.fabricmc.mappingio.tree.MemoryMappingTree
+import xyz.bluspring.kilt.gradle.MappingDownloader
 import java.io.File
 
-class AccessTransformerRemapper {
+object AccessTransformerRemapper {
     fun remapDescriptor(descriptor: String, mappings: MemoryMappingTree): String {
         var formed = ""
 

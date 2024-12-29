@@ -1,13 +1,4 @@
 accessWidener v2 named
-
-# Kilt's own access wideners.
-accessible class net/minecraft/server/network/ServerLoginPacketListenerImpl$State
-
-accessible method net/minecraft/client/renderer/texture/SpriteContents$AnimatedTexture getFrameX (I)I
-accessible method net/minecraft/client/renderer/texture/SpriteContents$AnimatedTexture getFrameY (I)I
-transitive-accessible method net/minecraft/world/entity/Entity setRemoved (Lnet/minecraft/world/entity/Entity$RemovalReason;)V
-transitive-extendable method net/minecraft/world/entity/Entity setRemoved (Lnet/minecraft/world/entity/Entity$RemovalReason;)V
-
 # Auto generated access widener from NeoForge's access transformers.
 transitive-accessible method net/minecraft/advancements/CriteriaTriggers register (Lnet/minecraft/advancements/CriterionTrigger;)Lnet/minecraft/advancements/CriterionTrigger;
 transitive-extendable method net/minecraft/advancements/CriteriaTriggers register (Lnet/minecraft/advancements/CriterionTrigger;)Lnet/minecraft/advancements/CriterionTrigger;
@@ -449,22 +440,8 @@ transitive-accessible class net/minecraft/util/datafix/fixes/StructuresBecomeCon
 transitive-extendable class net/minecraft/util/datafix/fixes/StructuresBecomeConfiguredFix$Conversion
 transitive-accessible method net/minecraft/util/thread/BlockableEventLoop submitAsync (Ljava/lang/Runnable;)Ljava/util/concurrent/CompletableFuture;
 transitive-extendable method net/minecraft/util/thread/BlockableEventLoop submitAsync (Ljava/lang/Runnable;)Ljava/util/concurrent/CompletableFuture;
-transitive-accessible field net/minecraft/world/damagesource/CombatTracker INTENTIONAL_GAME_DESIGN_STYLE Lnet/minecraft/network/chat/Style;
-transitive-mutable field net/minecraft/world/damagesource/CombatTracker INTENTIONAL_GAME_DESIGN_STYLE Lnet/minecraft/network/chat/Style;
-transitive-accessible method net/minecraft/world/damagesource/CombatTracker getMostSignificantFall ()Lnet/minecraft/world/damagesource/CombatEntry;
-transitive-extendable method net/minecraft/world/damagesource/CombatTracker getMostSignificantFall ()Lnet/minecraft/world/damagesource/CombatEntry;
-transitive-accessible method net/minecraft/world/damagesource/CombatTracker getFallMessage (Lnet/minecraft/world/damagesource/CombatEntry;Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/network/chat/Component;
-transitive-extendable method net/minecraft/world/damagesource/CombatTracker getFallMessage (Lnet/minecraft/world/damagesource/CombatEntry;Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/network/chat/Component;
 transitive-accessible method net/minecraft/world/damagesource/DamageSource <init> (Lnet/minecraft/core/Holder;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/Vec3;)V
 transitive-extendable method net/minecraft/world/damagesource/DamageSource <init> (Lnet/minecraft/core/Holder;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/Vec3;)V
-transitive-accessible method net/minecraft/world/damagesource/DamageSources source (Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/world/damagesource/DamageSource;
-transitive-extendable method net/minecraft/world/damagesource/DamageSources source (Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/world/damagesource/DamageSource;
-transitive-accessible method net/minecraft/world/damagesource/DamageSources source (Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/world/damagesource/DamageSource;
-transitive-extendable method net/minecraft/world/damagesource/DamageSources source (Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/world/damagesource/DamageSource;
-transitive-accessible method net/minecraft/world/damagesource/DamageSources source (Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/world/damagesource/DamageSource;
-transitive-extendable method net/minecraft/world/damagesource/DamageSources source (Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/world/damagesource/DamageSource;
-transitive-accessible field net/minecraft/world/damagesource/DamageSources damageTypes Lnet/minecraft/core/Registry;
-transitive-mutable field net/minecraft/world/damagesource/DamageSources damageTypes Lnet/minecraft/core/Registry;
 transitive-accessible field net/minecraft/world/entity/Entity ENTITY_COUNTER Ljava/util/concurrent/atomic/AtomicInteger;
 transitive-mutable field net/minecraft/world/entity/Entity ENTITY_COUNTER Ljava/util/concurrent/atomic/AtomicInteger;
 transitive-accessible method net/minecraft/world/entity/Entity getEncodeId ()Ljava/lang/String;

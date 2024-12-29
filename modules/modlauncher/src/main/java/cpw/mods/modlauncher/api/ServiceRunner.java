@@ -19,7 +19,7 @@
 package cpw.mods.modlauncher.api;
 
 /**
- * A type of Runnable that throws a Throwable. Allows for tidier implementations than Callable<Void>
+ * A type of Runnable that throws a Throwable. Allows for tidier implementations than {@code Callable<Void>}
  */
 public interface ServiceRunner {
     void run() throws Throwable;

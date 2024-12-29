@@ -1,29 +1,16 @@
 @file:Suppress("LocalVariableName", "UnstableApiUsage")
 
 import org.ajoberstar.grgit.Grgit
-import org.jetbrains.kotlin.daemon.common.toHexString
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import xyz.bluspring.kilt.gradle.AccessTransformerRemapper
-import java.security.MessageDigest
 
 plugins {
     kotlin("jvm")
-    id ("fabric-loom") version "1.9-SNAPSHOT"
-    id ("maven-publish")
-    id ("org.ajoberstar.grgit") version "5.0.0" apply false
+    id ("xyz.bluspring.kilt.gradle.loom")
+    id ("org.ajoberstar.grgit") version "5.0.0"
+    id ("xyz.bluspring.kilt.gradle.custom-tasks")
 }
 
-allprojects {
-    apply(plugin = "java-library")
-    apply(plugin = "org.jetbrains.kotlin.jvm")
-
-    group = property("maven_group")!!
-    version = "${property("mod_version")}+mc${property("minecraft_version")}${getVersionMetadata()}"
-}
-
-base {
-    archivesName.set(property("archives_base_name")!! as String)
-}
+group = property("maven_group")!!
+version = "${property("mod_version")}+mc${property("minecraft_version")}${getVersionMetadata()}"
 
 sourceSets {
     getByName("main") {
@@ -38,56 +25,48 @@ sourceSets {
 
 loom {
     accessWidenerPath.set(file("src/main/resources/kilt.accesswidener"))
-    mixin {
-        showMessageTypes.set(true)
+}
 
-        messages.set(mutableMapOf("ACCESSOR_TARGET_NOT_FOUND" to "disabled"))
+tasks {
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     }
 }
 
 dependencies {
-    // To change the versions see the gradle.properties file
-    minecraft ("com.mojang:minecraft:${property("minecraft_version")}")
-    mappings (loom.layered {
-        officialMojangMappings()
-        parchment("org.parchmentmc.data:parchment-${property("parchment_version")}:${property("parchment_release")}@zip")
-    })
-    modImplementation ("net.fabricmc:fabric-loader:${property("loader_version")}")
-
-    // Fabric API. This is technically optional, but you probably want it anyway.
-    modImplementation ("net.fabricmc.fabric-api:fabric-api:${property("fabric_version")}")
+    //! Minecraft, Mappings, Fabric Loader/API, and most dependencies are handled in the `loom` custom plugin
 
     // Just because I like Kotlin more than Java
-    modImplementation ("net.fabricmc:fabric-language-kotlin:${property("fabric_kotlin_version")}")
+    modRuntimeOnly("net.fabricmc:fabric-language-kotlin:${property("fabric_kotlin_version")}")
 
     // we require Indium due to us using Fabric Rendering API stuff.
     // let's tell the users that too.
-    modImplementation(include("me.luligabi:NoIndium:${property("no_indium_version")}") {
+    include("me.luligabi:NoIndium:${property("no_indium_version")}") {
         exclude("net.fabricmc", "fabric-loader")
-    })
+    }
 
     // Kilt modules
-    include(implementation(projects.kiltModlauncher)!!)
+    rootDir.resolve("modules").listFiles { f: File -> f.isDirectory }?.forEach {
+        include(implementation(project(":modules:${it.name}"))!!)
+    }
 
     // Forge Reimplementations
     val portingLibs = listOf("accessors", "asm", "attributes", "base", "blocks", "brewing", "chunk_loading", "client_events", "common", "core", "data", "entity", "extensions", "fluids", "gametest", "gui_utils", "items", "lazy_registration", "level_events", "loot", "mixin_extensions", "model_builders", "model_generators", "model_loader", "model_materials", "models", "networking", "obj_loader", "recipe_book_categories", "registries", "tags", "tool_actions", "transfer", "utility")
     portingLibs.forEach { lib ->
-        modImplementation(include("io.github.fabricators_of_create.Porting-Lib:$lib:${property("porting_lib_version")}")!!)
+        include(modImplementation("io.github.fabricators_of_create.Porting-Lib:$lib:${property("porting_lib_version")}")!!)
     }
-    modImplementation ("dev.architectury:architectury-fabric:${property("architectury_version")}")
 
     // Cursed Fabric/Mixin stuff
-    implementation(include("com.github.FabricCompatibilityLayers:CursedMixinExtensions:${property("cursedmixinextensions_version")}")!!)
-    modImplementation(include("com.github.Chocohead:Fabric-ASM:v${property("fabric_asm_version")}")!!)
+    include(implementation("com.github.FabricCompatibilityLayers:CursedMixinExtensions:${property("cursedmixinextensions_version")}")!!)
+    include(modImplementation("com.github.Chocohead:Fabric-ASM:v${property("fabric_asm_version")}")!!)
     include(implementation(annotationProcessor("com.github.bawnorton.mixinsquared:mixinsquared-fabric:${property("mixin_squared_version")}")!!)!!)
     include(modImplementation("de.florianmichael:AsmFabricLoader:${property("asmfabricloader_version")}")!!)
 
     // TODO: remove this when 0.5 is mainlined into Fabric
     include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:${property("mixinextras_version")}")!!)!!)
 
-//modImplementation(include("io.github.tropheusj:serialization-hooks:${property("serialization_hooks_version")}")!!)
-    modImplementation(include("com.jamieswhiteshirt:reach-entity-attributes:${property("reach_entity_attributes_version")}")!!)
     modImplementation("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${property("forgeconfigapiport_version")}")
+    //include(modImplementation("io.github.tropheusj:serialization-hooks:${property("serialization_hooks_version")}")!!)
+    include(modImplementation("com.jamieswhiteshirt:reach-entity-attributes:${property("reach_entity_attributes_version")}")!!)
     include(implementation("xyz.bluspring.kiltmc:MixinConstraints:${property("mixinconstraints_version")}") {
         exclude("org.spongepowered", "mixin")
     })
@@ -148,9 +127,6 @@ dependencies {
         exclude("net.fabricmc", "fabric-loader")
     }
 
-    // apparently I need this for Nullable to exist
-    implementation("com.google.code.findbugs:jsr305:3.0.2")
-
     implementation(include("commons-codec:commons-codec:1.15")!!)
 }
 
@@ -158,116 +134,16 @@ configurations.all {
     exclude("cpw.mods", "modlauncher")
 }
 
-val targetJavaVersion = "17"
-
-allprojects {
-    configure<JavaPluginExtension> {
-        val javaVersion = JavaVersion.toVersion(targetJavaVersion)
-        if (JavaVersion.current() < javaVersion) {
-            toolchain.languageVersion.set(JavaLanguageVersion.of(targetJavaVersion))
-        }
-
-        sourceCompatibility = javaVersion
-        targetCompatibility = javaVersion
-
-        // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-        // if it is present.
-        // If you remove this line, sources will not be generated.
-        withSourcesJar()
-    }
-}
-
-interface InjectedServices {
-    @get:Inject val fs: FileSystemOperations
-    @get:Inject val layout: ProjectLayout
-    @get:Inject val provider: ProviderFactory
+interface ProviderFactoryHolder {
+    @get:Inject
+    val provider: ProviderFactory
 }
 
 tasks {
-    register("countPatchProgress") {
-        group = "kilt"
-        description = "Counts the total of patches in Forge, and checks how many Kilt ForgeInjects there are, to check how much is remaining."
-        notCompatibleWithConfigurationCache("Must not be cached")
-
-        doFirst {
-            // Scan Forge patches dir
-            var count = 0
-
-            fun readDir(file: File) {
-                val files = file.listFiles()!!
-
-                files.forEach {
-                    if (it.isDirectory) {
-                        readDir(it)
-                    } else {
-                        count++
-                    }
-                }
-            }
-
-            readDir(File("$projectDir/forge/patches"))
-
-            val forgePatchCount = count
-            count = 0
-
-            readDir(File("$projectDir/src/main/java/xyz/bluspring/kilt/forgeinjects"))
-            val kiltInjectCount = count
-
-            println("Progress: $kiltInjectCount injects/$forgePatchCount patches (${String.format("%.2f", (kiltInjectCount.toDouble() / forgePatchCount.toDouble()) * 100.0)}%)")
-        }
-    }
-
-    register("tagPatches") {
-        group = "kilt"
-        description = "Tags the Kilt ForgeInjects with their currently tracked patch hash to ensure they are all up to date."
-        notCompatibleWithConfigurationCache("Must not be cached")
-
-        doFirst {
-            fun readDir(file: File) {
-                val files = file.listFiles()!!
-                val md = MessageDigest.getInstance("SHA1")
-
-                files.forEach {
-                    if (it.isDirectory) {
-                        readDir(it)
-                    } else {
-                        val startDir = it.absolutePath.replace("\\", "/").replaceBefore("forgeinjects/", "").replace("forgeinjects/", "")
-                        val patchDir = if (startDir.startsWith("blaze3d") || startDir.startsWith("math")) "com/mojang/${startDir.replace("Inject.java", ".java.patch")}"
-                            else "net/minecraft/${startDir.replace("Inject.java", ".java.patch")}"
-
-                        val patchFile = File("$projectDir/forge/patches/minecraft/$patchDir")
-                        if (!patchFile.exists()) {
-                            println("!! WARNING !! Inject $startDir no longer has an associated patch file!")
-                            return@forEach
-                        }
-
-                        val patchHash = md.digest(patchFile.readBytes()).toHexString()
-
-                        val data = it.readLines().toMutableList()
-                        if (!data[0].startsWith("// TRACKED HASH: ")) {
-                            data.add(0, "// TRACKED HASH: $patchHash")
-                            it.writeText(data.joinToString("\r\n"))
-                        } else {
-                            val oldHash = data[0].removePrefix("// TRACKED HASH: ")
-
-                            if (oldHash != patchHash) {
-                                println("Inject $startDir is outdated! (patch: $patchHash, inject: $oldHash) Updating hash...")
-                                data[0] = "// TRACKED HASH: $patchHash"
-                                it.writeText(data.joinToString("\r\n"))
-                            }
-                        }
-                    }
-                }
-            }
-
-            readDir(File("$projectDir/src/main/java/xyz/bluspring/kilt/forgeinjects"))
-        }
-    }
-
     val projectVersion = project.version
 
     processResources {
-        val provider = objects.newInstance<InjectedServices>().provider
+        val provider = objects.newInstance<ProviderFactoryHolder>().provider
         val propertiesMap = mutableMapOf(
             "version" to projectVersion,
             "loader_version" to provider.gradleProperty("loader_version"),
@@ -289,76 +165,6 @@ tasks {
         // Rename Forge's mods.toml, so launchers like Prism don't end up detecting it over Kilt.
         filesMatching("META-INF/mods.toml") {
             this.name = "forge.mods.toml"
-        }
-    }
-
-    compileKotlin {
-        compilerOptions {
-            jvmTarget.set(JvmTarget.fromTarget(targetJavaVersion))
-        }
-    }
-
-    jar {
-        from("LICENSE") {
-            rename { "${it}_${archiveBaseName.get()}" }
-        }
-    }
-
-    named<Jar>("sourcesJar") {
-        duplicatesStrategy = DuplicatesStrategy.WARN
-    }
-
-    // configure the maven publication
-    publishing {
-        publications {
-            create<MavenPublication>("mavenJava") {
-                artifact(remapJar) {
-                    builtBy(remapJar)
-                }
-                artifact(kotlinSourcesJar) {
-                    builtBy(remapSourcesJar)
-                }
-            }
-        }
-
-        repositories {
-            mavenLocal()
-        }
-    }
-
-    register("setupDevEnvironment") {
-        group = "kilt"
-
-        val services = project.objects.newInstance<InjectedServices>()
-        doLast {
-            val configDir = services.layout.projectDirectory.dir("run/config")
-            configDir.asFile.mkdirs()
-
-            val loaderDepsFile = configDir.file("fabric_loader_dependencies.json")
-            val templateFile = services.layout.projectDirectory.file("gradle/loader_dep_overrides.json")
-            services.fs.copy {
-                from(templateFile)
-                into(loaderDepsFile)
-            }
-        }
-    }
-
-    register("transformerToWidener") {
-        group = "kilt"
-        notCompatibleWithConfigurationCache("Must not be cached")
-
-        val minecraft_version: String by project
-        doLast {
-            val remapper = AccessTransformerRemapper()
-            val transformerFile = File("$projectDir/forge/src/main/resources/META-INF/accesstransformer.cfg")
-            val widenerFile = File("$projectDir/src/main/resources/kilt.accesswidener")
-
-            remapper.convertTransformerToWidener(
-                transformerFile.readText(),
-                widenerFile,
-                minecraft_version,
-                layout.buildDirectory.asFile.get()
-            )
         }
     }
 }
